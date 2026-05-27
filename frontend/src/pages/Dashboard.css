@@ -1,7 +1,8 @@
 .dashboard-page {
   min-height: 100vh;
-  background: #f0f4ff;
   padding: 40px 24px;
+  position: relative;
+  z-index: 1;
 }
 
 .dashboard-container {

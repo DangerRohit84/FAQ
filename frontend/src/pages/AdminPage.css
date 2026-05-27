@@ -1,7 +1,8 @@
 .admin-page {
   min-height: calc(100vh - 56px);
-  background: #f0f4ff;
   padding: 40px 20px 60px;
+  position: relative;
+  z-index: 1;
 }
 
 .admin-container {
