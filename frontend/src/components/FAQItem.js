@@ -1,7 +1,19 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import './FAQItem.css';
 
-function FAQItem({ number, question, answer, isOpen, onToggle }) {
+function FAQItem({ number, question, answer, isOpen, onToggle, catId, qId, views, onView }) {
+  const triggered = useRef(false);
+
+  useEffect(() => {
+    if (isOpen && !triggered.current) {
+      triggered.current = true;
+      fetch(`/api/faqs/${catId}/questions/${qId}/view`, { method: 'POST' })
+        .then(() => onView && onView())
+        .catch(() => {});
+    }
+    if (!isOpen) triggered.current = false;
+  }, [isOpen, catId, qId, onView]);
+
   return (
     <div className={`faq-item ${isOpen ? 'faq-item--open' : ''}`}>
       <button
@@ -11,6 +23,7 @@ function FAQItem({ number, question, answer, isOpen, onToggle }) {
       >
         <span className="faq-item__number">{number}</span>
         <span className="faq-item__question">{question}</span>
+        <span className="faq-item__views">{views || 0} view{(views || 0) !== 1 ? 's' : ''}</span>
         <div className="faq-item__icon">
           <svg
             viewBox="0 0 24 24"

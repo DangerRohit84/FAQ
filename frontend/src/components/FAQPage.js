@@ -50,6 +50,22 @@ function FAQPage() {
     }));
   }, []);
 
+  const handleView = useCallback((catIdx, qIdx) => {
+    if (searchResults !== null) {
+      setSearchResults(prev => prev ? prev.map((cat, i) =>
+        i === catIdx ? { ...cat, questions: cat.questions.map((q, j) =>
+          j === qIdx ? { ...q, views: (q.views || 0) + 1 } : q
+        ) } : cat
+      ) : prev);
+    } else {
+      setFaqData(prev => prev.map((cat, i) =>
+        i === catIdx ? { ...cat, questions: cat.questions.map((q, j) =>
+          j === qIdx ? { ...q, views: (q.views || 0) + 1 } : q
+        ) } : cat
+      ));
+    }
+  }, [searchResults]);
+
   if (loading) {
     return (
       <div className="faq-page">
@@ -140,12 +156,16 @@ function FAQPage() {
                   </div>
                   {category.questions.map((item, qIdx) => (
                     <FAQItem
-                      key={qIdx}
+                      key={item._id || qIdx}
                       number={qIdx + 1}
                       question={item.q}
                       answer={item.a}
                       isOpen={openItems[catIdx] === qIdx}
                       onToggle={() => toggleItem(catIdx, qIdx)}
+                      catId={category._id}
+                      qId={item._id}
+                      views={item.views}
+                      onView={() => handleView(catIdx, qIdx)}
                     />
                   ))}
                 </div>
@@ -155,7 +175,7 @@ function FAQPage() {
         ) : (
           <div className="faq-grid" ref={gridRef}>
             {displayedData.map((category, catIdx) => (
-              <div key={catIdx} className="faq-category-card" style={{ animationDelay: `${catIdx * 0.06}s` }}>
+              <div key={category._id || catIdx} className="faq-category-card" style={{ animationDelay: `${catIdx * 0.06}s` }}>
                 <div className="faq-category-card__header">
                   <span className="faq-category-card__icon">{category.icon}</span>
                   <h2 className="faq-category-card__title">{category.category}</h2>
@@ -164,12 +184,16 @@ function FAQPage() {
                 <div className="faq-category-card__body">
                   {category.questions.map((item, qIdx) => (
                     <FAQItem
-                      key={qIdx}
+                      key={item._id || qIdx}
                       number={qIdx + 1}
                       question={item.q}
                       answer={item.a}
                       isOpen={openItems[catIdx] === qIdx}
                       onToggle={() => toggleItem(catIdx, qIdx)}
+                      catId={category._id}
+                      qId={item._id}
+                      views={item.views}
+                      onView={() => handleView(catIdx, qIdx)}
                     />
                   ))}
                 </div>

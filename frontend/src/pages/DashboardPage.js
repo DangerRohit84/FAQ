@@ -72,8 +72,8 @@ function DashboardPage() {
                   <path d="M16 3.13a4 4 0 0 1 0 7.75" />
                 </svg>
               </div>
-              <div className="dashboard-stat-card__value">1</div>
-              <div className="dashboard-stat-card__label">Your Queries</div>
+              <div className="dashboard-stat-card__value">{stats.openOaqs}</div>
+              <div className="dashboard-stat-card__label">Open Q&A</div>
             </div>
           </div>
         )}
@@ -87,13 +87,20 @@ function DashboardPage() {
               </svg>
               <span>Browse FAQ</span>
             </button>
-            <button className="dashboard-link-card" onClick={() => navigate('/login')}>
+            <button className="dashboard-link-card" onClick={() => navigate('/community')}>
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4" />
-                <polyline points="10 17 15 12 10 7" /><line x1="15" y1="12" x2="3" y2="12" />
+                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
               </svg>
-              <span>Switch Account</span>
+              <span>Community Q&A</span>
             </button>
+            {user.role === 'admin' && (
+              <button className="dashboard-link-card" onClick={() => navigate('/admin')}>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+                </svg>
+                <span>Admin Panel</span>
+              </button>
+            )}
           </div>
         </div>
       </div>
