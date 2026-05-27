@@ -259,10 +259,16 @@
   overflow-x: hidden;
   max-height: 480px;
   padding: 10px;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
 }
 
 .faq-category-card__body > * + * {
   margin-top: 8px;
+}
+
+.faq-category-card__body::-webkit-scrollbar {
+  display: none;
 }
 
 /* ---- Search results list (flat) ---- */
