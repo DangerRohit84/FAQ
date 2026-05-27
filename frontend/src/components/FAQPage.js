@@ -9,6 +9,7 @@ function FAQPage() {
   const [loading, setLoading] = useState(true);
   const [openItems, setOpenItems] = useState({});
   const searchTimer = useRef(null);
+  const gridRef = useRef(null);
 
   useEffect(() => {
     fetch('/api/faqs')
@@ -53,7 +54,19 @@ function FAQPage() {
     return (
       <div className="faq-page">
         <div className="faq-container">
-          <div className="loading-spinner" />
+          <div className="faq-loader">
+            <div className="faq-loader__bar" />
+            <div className="faq-loader__cards">
+              {[1, 2, 3, 4].map(i => (
+                <div key={i} className="faq-loader__card">
+                  <div className="faq-loader__header" />
+                  <div className="faq-loader__item" />
+                  <div className="faq-loader__item" />
+                  <div className="faq-loader__item" />
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
       </div>
     );
@@ -65,8 +78,10 @@ function FAQPage() {
 
       <div className="faq-container">
         <div className="faq-header">
-          <span className="faq-badge">💬 Help Center</span>
-          <h1 className="faq-title">Frequently Asked Questions</h1>
+          <span className="faq-badge">Help Center</span>
+          <h1 className="faq-title">
+            <span className="faq-title__text">Frequently Asked Questions</span>
+          </h1>
           <p className="faq-subtitle">
             Everything you need to know about Vicharanashala Internship. Can't find what you're looking for?{' '}
             <a href="#contact" className="faq-contact-link">Contact our support team</a>.
@@ -75,7 +90,7 @@ function FAQPage() {
 
         <div className="faq-search-wrapper">
           <div className="faq-search">
-            <svg className="faq-search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <svg className="faq-search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
               <circle cx="11" cy="11" r="8" />
               <path d="m21 21-4.35-4.35" />
             </svg>
@@ -113,11 +128,12 @@ function FAQPage() {
         ) : isSearching ? (
           <>
             <div className="faq-results-count">
+              <span className="faq-results-count__dot" />
               Found {displayedData.reduce((sum, cat) => sum + cat.questions.length, 0)} result(s)
             </div>
             <div className="faq-list">
               {displayedData.map((category, catIdx) => (
-                <div key={catIdx} className="faq-category-card">
+                <div key={catIdx} className="faq-category-card" style={{ animationDelay: `${catIdx * 0.05}s` }}>
                   <div className="faq-category-card__header">
                     <span className="faq-category-card__icon">{category.icon}</span>
                     <h2 className="faq-category-card__title">{category.category}</h2>
@@ -137,9 +153,9 @@ function FAQPage() {
             </div>
           </>
         ) : (
-          <div className="faq-grid">
+          <div className="faq-grid" ref={gridRef}>
             {displayedData.map((category, catIdx) => (
-              <div key={catIdx} className="faq-category-card">
+              <div key={catIdx} className="faq-category-card" style={{ animationDelay: `${catIdx * 0.06}s` }}>
                 <div className="faq-category-card__header">
                   <span className="faq-category-card__icon">{category.icon}</span>
                   <h2 className="faq-category-card__title">{category.category}</h2>
@@ -163,7 +179,7 @@ function FAQPage() {
         )}
 
         <div className="faq-footer">
-          <p>Still have questions? <a href="#contact">Get in touch</a></p>
+          <p>Still have questions? <a href="#contact">Get in touch →</a></p>
         </div>
       </div>
     </div>
