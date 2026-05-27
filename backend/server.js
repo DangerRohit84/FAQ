@@ -340,6 +340,83 @@ app.post('/api/ai/check-duplicate', async (req, res) => {
   }
 });
 
+/* ── Leaderboard ── */
+app.get('/api/leaderboard', async (req, res) => {
+  try {
+    const oaqs = await OAQ.find({ status: { $ne: 'rejected' } })
+      .populate('submittedBy', 'name email')
+      .lean({ virtuals: true });
+
+    const userMap = {};
+
+    for (const oaq of oaqs) {
+      const uid = oaq.submittedBy?._id?.toString();
+      if (!uid) continue;
+      if (!userMap[uid]) {
+        userMap[uid] = {
+          _id: uid,
+          name: oaq.submittedBy.name || 'Anonymous',
+          email: oaq.submittedBy.email || '',
+          questionsAsked: 0,
+          answersGiven: 0,
+          upvotesReceived: 0,
+          downvotesReceived: 0,
+          acceptedCount: 0,
+          promotedCount: 0,
+          score: 0,
+        };
+      }
+
+      const u = userMap[uid];
+      u.questionsAsked++;
+      u.upvotesReceived += (oaq.votedUpBy || []).length;
+      u.downvotesReceived += (oaq.votedDownBy || []).length;
+      if (oaq.status === 'promoted') u.promotedCount++;
+
+      for (const ans of oaq.answers) {
+        const ansUid = ans.submittedBy?._id?.toString();
+        if (!ansUid) continue;
+        if (!userMap[ansUid]) {
+          const ansUser = ans.submittedBy || {};
+          userMap[ansUid] = {
+            _id: ansUid,
+            name: ansUser.name || 'Anonymous',
+            email: ansUser.email || '',
+            questionsAsked: 0,
+            answersGiven: 0,
+            upvotesReceived: 0,
+            downvotesReceived: 0,
+            acceptedCount: 0,
+            promotedCount: 0,
+            score: 0,
+          };
+        }
+        const a = userMap[ansUid];
+        a.answersGiven++;
+        a.upvotesReceived += (ans.votedUpBy || []).length;
+        a.downvotesReceived += (ans.votedDownBy || []).length;
+        if (ans.accepted) a.acceptedCount++;
+      }
+    }
+
+    const users = Object.values(userMap);
+    for (const u of users) {
+      u.score =
+        u.questionsAsked * 5 +
+        u.answersGiven * 10 +
+        u.upvotesReceived * 3 +
+        u.downvotesReceived * -2 +
+        u.acceptedCount * 25 +
+        u.promotedCount * 50;
+    }
+
+    users.sort((a, b) => b.score - a.score);
+    res.json(users);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 app.listen(PORT, () => {
   console.log(`FAQ API server running on http://localhost:${PORT}`);
 });

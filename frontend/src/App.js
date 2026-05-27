@@ -9,6 +9,7 @@ import RegisterPage from './pages/RegisterPage';
 import DashboardPage from './pages/DashboardPage';
 import OAQPage from './pages/OAQPage';
 import AdminPage from './pages/AdminPage';
+import LeaderboardPage from './pages/LeaderboardPage';
 import './App.css';
 
 function App() {
@@ -24,6 +25,7 @@ function App() {
           <Route path="/dashboard" element={<DashboardPage />} />
           <Route path="/community" element={<OAQPage />} />
           <Route path="/admin" element={<AdminPage />} />
+          <Route path="/leaderboard" element={<LeaderboardPage />} />
         </Routes>
       </AuthProvider>
     </BrowserRouter>

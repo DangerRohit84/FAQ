@@ -1,0 +1,174 @@
+.lb-page {
+  min-height: calc(100vh - 56px);
+  background: #f0f4ff;
+  padding: 40px 20px 60px;
+}
+
+.lb-container {
+  max-width: 700px;
+  margin: 0 auto;
+}
+
+.lb-header {
+  text-align: center;
+  margin-bottom: 28px;
+}
+
+.lb-title {
+  font-size: 1.8rem;
+  font-weight: 800;
+  color: #0f172a;
+  margin-bottom: 6px;
+}
+
+.lb-subtitle {
+  font-size: 0.95rem;
+  color: #64748b;
+  margin-bottom: 12px;
+}
+
+.lb-rules-toggle {
+  border: none;
+  background: none;
+  color: #4f46e5;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.lb-rules-toggle:hover {
+  text-decoration: underline;
+}
+
+/* ── Rules card ── */
+.lb-rules {
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  padding: 20px;
+  margin-bottom: 24px;
+}
+
+.lb-rules h3 {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 0 0 14px;
+}
+
+.lb-rules-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.lb-rule {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 12px;
+  background: #f8fafc;
+  border-radius: 8px;
+  font-size: 0.85rem;
+}
+
+.lb-rule__action {
+  color: #334155;
+}
+
+.lb-rule__points {
+  font-weight: 700;
+}
+
+.lb-rule__points.positive { color: #16a34a; }
+.lb-rule__points.negative { color: #dc2626; }
+
+/* ── Loader & Empty ── */
+.lb-loader, .lb-empty {
+  text-align: center;
+  color: #94a3b8;
+  padding: 40px;
+  font-size: 0.95rem;
+}
+
+/* ── List ── */
+.lb-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.lb-card {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  padding: 16px 18px;
+  transition: box-shadow 0.2s, transform 0.2s;
+}
+
+.lb-card:hover {
+  box-shadow: 0 4px 16px rgba(0,0,0,0.05);
+}
+
+.lb-card--rank-1 { border-color: #fbbf24; background: #fffbeb; }
+.lb-card--rank-2 { border-color: #d4d4d8; background: #fafafa; }
+.lb-card--rank-3 { border-color: #d97706; background: #fff7ed; }
+
+.lb-rank {
+  font-size: 1.3rem;
+  font-weight: 800;
+  min-width: 40px;
+  text-align: center;
+  color: #64748b;
+}
+
+.lb-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #4f46e5, #6366f1);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 1rem;
+  flex-shrink: 0;
+}
+
+.lb-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.lb-name {
+  font-weight: 700;
+  color: #0f172a;
+  font-size: 0.95rem;
+  margin-bottom: 2px;
+}
+
+.lb-stats {
+  display: flex;
+  gap: 6px;
+  font-size: 0.75rem;
+  color: #94a3b8;
+  flex-wrap: wrap;
+}
+
+.lb-score {
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: #4f46e5;
+  flex-shrink: 0;
+}
+
+@media (max-width: 640px) {
+  .lb-rules-grid { grid-template-columns: 1fr; }
+  .lb-card { flex-wrap: wrap; }
+  .lb-score { width: 100%; text-align: right; padding-top: 4px; border-top: 1px solid #f1f5f9; }
+}

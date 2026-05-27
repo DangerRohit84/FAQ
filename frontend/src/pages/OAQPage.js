@@ -256,7 +256,6 @@ function OAQPage() {
                     <span>{formatDate(oaq.createdAt)}</span>
                     <span>{oaq.views || 0} view{(oaq.views || 0) !== 1 ? 's' : ''}</span>
                     <span>{oaq.answers.length} answer{oaq.answers.length !== 1 ? 's' : ''}</span>
-                    <span className="oaq-card__score">Score: {getScore(oaq).toFixed(0)}</span>
                   </div>
                   <button className="oaq-card__expand" onClick={() => toggleExpand(oaq._id)}>
                     {expandedId === oaq._id ? 'Hide answers' : `View ${oaq.answers.length} answer${oaq.answers.length !== 1 ? 's' : ''}`}

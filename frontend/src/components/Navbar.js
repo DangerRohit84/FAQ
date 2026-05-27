@@ -22,6 +22,7 @@ function Navbar() {
           <Link to="/" className="navbar-link">Home</Link>
           <Link to="/faq" className="navbar-link">FAQ</Link>
           <Link to="/community" className="navbar-link">Community</Link>
+          <Link to="/leaderboard" className="navbar-link">Leaderboard</Link>
           {user ? (
             <>
               <Link to="/dashboard" className="navbar-link">Dashboard</Link>
