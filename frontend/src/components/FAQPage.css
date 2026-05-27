@@ -373,21 +373,11 @@
 }
 
 .faq-category-card__body {
-  min-height: 0;
-  overflow-y: auto;
-  overflow-x: hidden;
-  max-height: 480px;
   padding: 10px;
-  scrollbar-width: none;
-  -ms-overflow-style: none;
 }
 
 .faq-category-card__body > * + * {
   margin-top: 8px;
-}
-
-.faq-category-card__body::-webkit-scrollbar {
-  display: none;
 }
 
 /* ---- Search results list (flat) ---- */
@@ -466,7 +456,7 @@
     grid-template-columns: 1fr;
   }
   .faq-category-card__body {
-    max-height: 360px;
+    padding: 8px;
   }
   .faq-search-input {
     padding: 16px 44px 16px 48px;
