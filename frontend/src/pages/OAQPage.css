@@ -134,7 +134,7 @@
 }
 
 .oaq-btn--secondary:hover:not(:disabled) {
-  background: #e0e7ff;
+  background: var(--accent-light);
 }
 
 /* ---- Toolbar ---- */
@@ -528,4 +528,41 @@
 
 .oaq-related-item:not(:last-child) {
   border-bottom: 1px solid var(--border);
+}
+
+/* ── Dark mode overrides ── */
+[data-theme="dark"] .oaq-card--promoted {
+  background: #1e1b4b;
+}
+
+[data-theme="dark"] .oaq-card__score {
+  color: var(--accent);
+}
+
+[data-theme="dark"] .oaq-related {
+  background: #1e1b4b;
+  border-color: #312e81;
+}
+
+[data-theme="dark"] .oaq-related-item:hover {
+  color: var(--accent);
+}
+
+[data-theme="dark"] .oaq-duplicates {
+  background: #451a03;
+  border-color: #92400e;
+  color: #fbbf24;
+}
+
+[data-theme="dark"] .oaq-btn--secondary:hover:not(:disabled) {
+  background: #312e81;
+}
+
+[data-theme="dark"] .oaq-answer--accepted {
+  background: #052e16;
+  border-color: #166534;
+}
+
+[data-theme="dark"] .oaq-answer {
+  background: #1e293b;
 }
