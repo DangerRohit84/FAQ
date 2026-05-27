@@ -1,7 +1,7 @@
 import React from 'react';
 import './FAQItem.css';
 
-function FAQItem({ question, answer, isOpen, onToggle }) {
+function FAQItem({ number, question, answer, isOpen, onToggle }) {
   return (
     <div className={`faq-item ${isOpen ? 'faq-item--open' : ''}`}>
       <button
@@ -9,6 +9,7 @@ function FAQItem({ question, answer, isOpen, onToggle }) {
         onClick={onToggle}
         aria-expanded={isOpen}
       >
+        <span className="faq-item__number">{number}</span>
         <span className="faq-item__question">{question}</span>
         <div className="faq-item__icon">
           <svg
@@ -23,7 +24,11 @@ function FAQItem({ question, answer, isOpen, onToggle }) {
         </div>
       </button>
       <div className="faq-item__content" role="region">
-        <div className="faq-item__answer">{answer}</div>
+        <ul className="faq-item__answer">
+          {answer.split(/(?<=\.)\s+/).filter(Boolean).map((sentence, i) => (
+            <li key={i}>{sentence}</li>
+          ))}
+        </ul>
       </div>
     </div>
   );

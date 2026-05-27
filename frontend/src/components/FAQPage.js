@@ -1,12 +1,10 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import CategoryTabs from './CategoryTabs';
 import FAQItem from './FAQItem';
 import './FAQPage.css';
 
 function FAQPage() {
   const [faqData, setFaqData] = useState([]);
   const [searchResults, setSearchResults] = useState(null);
-  const [activeCategory, setActiveCategory] = useState(0);
   const [searchQuery, setSearchQuery] = useState('');
   const [loading, setLoading] = useState(true);
   const [openItems, setOpenItems] = useState(new Set());
@@ -43,7 +41,6 @@ function FAQPage() {
 
   const displayedData = searchResults ?? faqData;
   const isSearching = searchResults !== null;
-  const currentCategory = displayedData[activeCategory] || displayedData[0];
 
   const toggleItem = useCallback((catIndex, qIndex) => {
     const key = `${catIndex}-${qIndex}`;
@@ -74,7 +71,7 @@ function FAQPage() {
           <span className="faq-badge">💬 Help Center</span>
           <h1 className="faq-title">Frequently Asked Questions</h1>
           <p className="faq-subtitle">
-            Everything you need to know about our platform. Can't find what you're looking for?{' '}
+            Everything you need to know about Vicharanashala Internship. Can't find what you're looking for?{' '}
             <a href="#contact" className="faq-contact-link">Contact our support team</a>.
           </p>
         </div>
@@ -102,14 +99,6 @@ function FAQPage() {
           </div>
         </div>
 
-        {!isSearching && (
-          <CategoryTabs
-            categories={faqData}
-            activeIndex={activeCategory}
-            onSelect={setActiveCategory}
-          />
-        )}
-
         {displayedData.length === 0 ? (
           <div className="faq-empty">
             <div className="faq-empty-icon">
@@ -125,24 +114,56 @@ function FAQPage() {
             </button>
           </div>
         ) : isSearching ? (
-          <div className="faq-results-count">
-            Found {displayedData.reduce((sum, cat) => sum + cat.questions.length, 0)} result(s)
+          <>
+            <div className="faq-results-count">
+              Found {displayedData.reduce((sum, cat) => sum + cat.questions.length, 0)} result(s)
+            </div>
+            <div className="faq-list">
+              {displayedData.map((category, catIdx) => (
+                <div key={catIdx} className="faq-category-card">
+                  <div className="faq-category-card__header">
+                    <span className="faq-category-card__icon">{category.icon}</span>
+                    <h2 className="faq-category-card__title">{category.category}</h2>
+                  </div>
+                  {category.questions.map((item, qIdx) => (
+                    <FAQItem
+                      key={qIdx}
+                      number={qIdx + 1}
+                      question={item.q}
+                      answer={item.a}
+                      isOpen={openItems.has(`${catIdx}-${qIdx}`)}
+                      onToggle={() => toggleItem(catIdx, qIdx)}
+                    />
+                  ))}
+                </div>
+              ))}
+            </div>
+          </>
+        ) : (
+          <div className="faq-grid">
+            {displayedData.map((category, catIdx) => (
+              <div key={catIdx} className="faq-category-card">
+                <div className="faq-category-card__header">
+                  <span className="faq-category-card__icon">{category.icon}</span>
+                  <h2 className="faq-category-card__title">{category.category}</h2>
+                  <span className="faq-category-card__count">{category.questions.length}</span>
+                </div>
+                <div className="faq-category-card__body">
+                  {category.questions.map((item, qIdx) => (
+                    <FAQItem
+                      key={qIdx}
+                      number={qIdx + 1}
+                      question={item.q}
+                      answer={item.a}
+                      isOpen={openItems.has(`${catIdx}-${qIdx}`)}
+                      onToggle={() => toggleItem(catIdx, qIdx)}
+                    />
+                  ))}
+                </div>
+              </div>
+            ))}
           </div>
-        ) : null}
-
-        <div className="faq-list">
-          {(isSearching ? displayedData : currentCategory?.questions?.length ? [currentCategory] : []).map((category, catIdx) =>
-            category.questions.map((item, qIdx) => (
-              <FAQItem
-                key={`${catIdx}-${qIdx}`}
-                question={item.q}
-                answer={item.a}
-                isOpen={openItems.has(`${catIdx}-${qIdx}`)}
-                onToggle={() => toggleItem(catIdx, qIdx)}
-              />
-            ))
-          )}
-        </div>
+        )}
 
         <div className="faq-footer">
           <p>Still have questions? <a href="#contact">Get in touch</a></p>

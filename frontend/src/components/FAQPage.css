@@ -18,9 +18,11 @@
 }
 
 .faq-container {
-  max-width: 800px;
+  max-width: 1200px;
   margin: 0 auto;
 }
+
+/* ---- Header ---- */
 
 .faq-header {
   text-align: center;
@@ -67,39 +69,41 @@
   border-color: #4f46e5;
 }
 
+/* ---- Search bar (REQ-UX-04) ---- */
+
 .faq-search-wrapper {
-  margin-bottom: 32px;
+  margin-bottom: 36px;
 }
 
 .faq-search {
   position: relative;
-  max-width: 560px;
+  max-width: 680px;
   margin: 0 auto;
 }
 
 .faq-search-icon {
   position: absolute;
-  left: 18px;
+  left: 20px;
   top: 50%;
   transform: translateY(-50%);
-  width: 20px;
-  height: 20px;
+  width: 22px;
+  height: 22px;
   color: #94a3b8;
   pointer-events: none;
 }
 
 .faq-search-input {
   width: 100%;
-  padding: 16px 48px 16px 52px;
-  border: 1.5px solid #e2e8f0;
-  border-radius: 14px;
-  font-size: 1rem;
+  padding: 18px 52px 18px 56px;
+  border: 2px solid #e2e8f0;
+  border-radius: 16px;
+  font-size: 1.05rem;
   font-family: inherit;
   background: white;
   color: #1e293b;
   transition: all 0.25s;
   outline: none;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
 }
 
 .faq-search-input::placeholder {
@@ -107,20 +111,20 @@
 }
 
 .faq-search-input:focus {
-  border-color: #818cf8;
-  box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1);
+  border-color: #1e40af;
+  box-shadow: 0 0 0 4px rgba(30, 64, 175, 0.1);
 }
 
 .faq-search-clear {
   position: absolute;
-  right: 12px;
+  right: 14px;
   top: 50%;
   transform: translateY(-50%);
   background: #f1f5f9;
   border: none;
   border-radius: 8px;
-  width: 28px;
-  height: 28px;
+  width: 32px;
+  height: 32px;
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -134,9 +138,11 @@
 }
 
 .faq-search-clear svg {
-  width: 16px;
-  height: 16px;
+  width: 18px;
+  height: 18px;
 }
+
+/* ---- Empty state ---- */
 
 .faq-empty {
   text-align: center;
@@ -190,11 +196,81 @@
   font-weight: 500;
 }
 
+/* ---- Category cards grid (REQ-UX-01) ---- */
+
+.faq-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
+  gap: 24px;
+}
+
+.faq-category-card {
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
+  display: flex;
+  flex-direction: column;
+  transition: box-shadow 0.25s, border-color 0.25s;
+}
+
+.faq-category-card:hover {
+  border-color: #cbd5e1;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
+}
+
+/* ---- Card header: dark blue (REQ-UX-02) ---- */
+
+.faq-category-card__header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 16px 20px;
+  background: #1e3a5f;
+  border-radius: 16px 16px 0 0;
+  flex-shrink: 0;
+}
+
+.faq-category-card__icon {
+  font-size: 1.2rem;
+  line-height: 1;
+}
+
+.faq-category-card__title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #ffffff;
+  flex: 1;
+}
+
+.faq-category-card__count {
+  background: rgba(255, 255, 255, 0.15);
+  color: #ffffff;
+  padding: 2px 10px;
+  border-radius: 8px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  flex-shrink: 0;
+}
+
+.faq-category-card__body {
+  overflow-y: auto;
+  max-height: 480px;
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* ---- Search results list (flat) ---- */
+
 .faq-list {
   display: flex;
   flex-direction: column;
   gap: 12px;
 }
+
+/* ---- Footer ---- */
 
 .faq-footer {
   text-align: center;
@@ -219,7 +295,7 @@
   height: 40px;
   margin: 100px auto;
   border: 4px solid #e2e8f0;
-  border-top-color: #4f46e5;
+  border-top-color: #1e40af;
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
 }
@@ -237,5 +313,11 @@
   }
   .faq-page {
     padding: 24px 16px 40px;
+  }
+  .faq-grid {
+    grid-template-columns: 1fr;
+  }
+  .faq-category-card__body {
+    max-height: 360px;
   }
 }
