@@ -176,27 +176,6 @@ function HomePage() {
               </button>
             ))}
           </div>
-
-          {/* Category cards inside hero */}
-          {!searchResults && homeData?.categoryCards && (
-            <div className="home-categories-in-hero">
-              <h3 className="home-categories-in-hero__title">Browse by Category</h3>
-              <div className="home-category-grid" ref={gridRef}>
-                {homeData.categoryCards.map((cat, i) => (
-                  <div
-                    key={cat._id}
-                    className="home-category-card"
-                    style={{ animationDelay: `${i * 0.05}s` }}
-                    onClick={() => navigate('/faq')}
-                  >
-                    <div className="home-category-card__icon">{cat.icon}</div>
-                    <div className="home-category-card__name">{cat.category}</div>
-                    <div className="home-category-card__count">{cat.count} question{cat.count !== 1 ? 's' : ''}</div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
         </div>
 
         {/* Search results */}
@@ -238,6 +217,33 @@ function HomePage() {
                 ))}
               </div>
             )}
+          </div>
+        )}
+
+        {/* Category cards */}
+        {!searchResults && homeData?.categoryCards && (
+          <div className="home-section">
+            <h2 className="home-section-title">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="home-section-icon">
+                <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H19a1 1 0 0 1 1 1v18a1 1 0 0 1-1 1H6.5A2.5 2.5 0 0 1 4 19.5Z" />
+                <path d="M9 10h6M9 6h6M9 14h3" />
+              </svg>
+              Browse by Category
+            </h2>
+            <div className="home-category-grid" ref={gridRef}>
+              {homeData.categoryCards.map((cat, i) => (
+                <div
+                  key={cat._id}
+                  className="home-category-card"
+                  style={{ animationDelay: `${i * 0.05}s` }}
+                  onClick={() => navigate('/faq')}
+                >
+                  <div className="home-category-card__icon">{cat.icon}</div>
+                  <div className="home-category-card__name">{cat.category}</div>
+                  <div className="home-category-card__count">{cat.count} question{cat.count !== 1 ? 's' : ''}</div>
+                </div>
+              ))}
+            </div>
           </div>
         )}
 
