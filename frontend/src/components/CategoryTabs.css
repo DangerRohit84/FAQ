@@ -55,7 +55,7 @@
 }
 
 .category-tab:hover {
-  color: #475569;
+  color: var(--text-muted);
 }
 
 .category-tab--active {

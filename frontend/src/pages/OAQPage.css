@@ -411,7 +411,7 @@
 
 .oaq-answer__body p {
   font-size: 0.9rem;
-  color: #334155;
+  color: var(--text-secondary);
   line-height: 1.6;
   margin-bottom: 6px;
 }
@@ -448,7 +448,7 @@
 }
 
 .oaq-btn--ghost:hover {
-  color: #334155;
+  color: var(--text-secondary);
 }
 
 /* ---- Select / Category ---- */
@@ -518,7 +518,7 @@
 .oaq-related-item {
   padding: 6px 0;
   cursor: pointer;
-  color: #334155;
+  color: var(--text-secondary);
   transition: color 0.15s;
 }
 

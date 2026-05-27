@@ -159,7 +159,7 @@
   text-align: left;
   font-size: 0.9rem;
   cursor: pointer;
-  color: #334155;
+  color: var(--text-secondary);
   transition: background 0.15s;
   font-family: inherit;
 }
@@ -212,8 +212,8 @@
 
 .home-filter-pill.active {
   background: var(--bg-card);
-  color: #1e40af;
-  border-color: white;
+  color: var(--accent);
+  border-color: var(--border);
   font-weight: 600;
 }
 
@@ -255,7 +255,7 @@
   color: var(--text-muted);
 }
 
-.home-results-empty h3 { margin: 0 0 8px; color: #334155; }
+.home-results-empty h3 { margin: 0 0 8px; color: var(--text-secondary); }
 .home-results-empty p { margin: 0 0 20px; }
 
 .home-cta-btn {
@@ -510,7 +510,7 @@
 .home-stat__value {
   font-size: 1.8rem;
   font-weight: 800;
-  color: #1e40af;
+  color: var(--accent);
 }
 
 .home-stat__label {

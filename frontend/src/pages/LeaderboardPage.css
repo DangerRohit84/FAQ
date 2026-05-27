@@ -75,7 +75,7 @@
 }
 
 .lb-rule__action {
-  color: #334155;
+  color: var(--text-secondary);
 }
 
 .lb-rule__points {
@@ -118,6 +118,22 @@
 .lb-card--rank-1 { border-color: #fbbf24; background: #fffbeb; }
 .lb-card--rank-2 { border-color: #d4d4d8; background: #fafafa; }
 .lb-card--rank-3 { border-color: #d97706; background: #fff7ed; }
+
+.lb-card--rank-1 .lb-name,
+.lb-card--rank-2 .lb-name,
+.lb-card--rank-3 .lb-name { color: #1e293b; }
+
+.lb-card--rank-1 .lb-score,
+.lb-card--rank-2 .lb-score,
+.lb-card--rank-3 .lb-score { color: #4f46e5; }
+
+.lb-card--rank-1 .lb-stats,
+.lb-card--rank-2 .lb-stats,
+.lb-card--rank-3 .lb-stats { color: #475569; }
+
+.lb-card--rank-1 .lb-rank,
+.lb-card--rank-2 .lb-rank,
+.lb-card--rank-3 .lb-rank { color: #64748b; }
 
 .lb-rank {
   font-size: 1.3rem;

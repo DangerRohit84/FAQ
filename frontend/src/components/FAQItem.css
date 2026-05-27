@@ -124,7 +124,7 @@
   list-style: none;
   margin: 0;
   padding: 0 18px 16px 18px;
-  color: #475569;
+  color: var(--text-secondary);
   line-height: 1.7;
   font-size: 0.9rem;
 }
@@ -167,4 +167,25 @@
 
 [data-theme="dark"] .faq-item--open {
   box-shadow: 0 4px 20px rgba(99, 102, 241, 0.15);
+}
+
+[data-theme="dark"] .faq-item--open .faq-item__trigger {
+  color: #818cf8;
+}
+
+[data-theme="dark"] .faq-item--open .faq-item__number {
+  background: linear-gradient(135deg, #312e81, #3730a3);
+  color: #c7d2fe;
+}
+
+[data-theme="dark"] .faq-item--open .faq-item__icon {
+  background: #312e81;
+}
+
+[data-theme="dark"] .faq-item--open .faq-item__chevron {
+  color: #818cf8;
+}
+
+[data-theme="dark"] .faq-item__answer li::before {
+  background: #6366f1;
 }
