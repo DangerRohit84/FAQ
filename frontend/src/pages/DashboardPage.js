@@ -7,6 +7,8 @@ function DashboardPage() {
   const { user, loading, authFetch, logout } = useAuth();
   const navigate = useNavigate();
   const [stats, setStats] = useState(null);
+  const [trending, setTrending] = useState([]);
+  const [myOaqs, setMyOaqs] = useState([]);
 
   useEffect(() => {
     if (!loading && !user) navigate('/login');
@@ -16,7 +18,12 @@ function DashboardPage() {
     if (!user) return;
     authFetch('/api/dashboard')
       .then(res => res.ok ? res.json() : null)
-      .then(data => data && setStats(data.stats))
+      .then(data => {
+        if (!data) return;
+        setStats(data.stats);
+        setTrending(data.trending || []);
+        setMyOaqs(data.myOaqs || []);
+      })
       .catch(() => {});
   }, [user]);
 
@@ -61,7 +68,7 @@ function DashboardPage() {
                 </svg>
               </div>
               <div className="dashboard-stat-card__value">{stats.questions}</div>
-              <div className="dashboard-stat-card__label">Questions</div>
+              <div className="dashboard-stat-card__label">Total Questions</div>
             </div>
             <div className="dashboard-stat-card">
               <div className="dashboard-stat-card__icon">
@@ -75,9 +82,59 @@ function DashboardPage() {
               <div className="dashboard-stat-card__value">{stats.openOaqs}</div>
               <div className="dashboard-stat-card__label">Open Q&A</div>
             </div>
+            <div className="dashboard-stat-card">
+              <div className="dashboard-stat-card__icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                  <polyline points="23 6 13.5 15.5 8.5 10.5 1 18" />
+                  <polyline points="17 6 23 6 23 12" />
+                </svg>
+              </div>
+              <div className="dashboard-stat-card__value">{stats.promotedCount}</div>
+              <div className="dashboard-stat-card__label">Promoted to FAQ</div>
+            </div>
           </div>
         )}
 
+        {/* Trending */}
+        {trending.length > 0 && (
+          <div className="dashboard-section">
+            <h2>Trending This Week</h2>
+            <div className="dashboard-trending-list">
+              {trending.map((o, i) => (
+                <div key={o._id} className="dashboard-trending-item" onClick={() => navigate('/community')}>
+                  <span className="dashboard-trending-rank">#{i + 1}</span>
+                  <div>
+                    <div className="dashboard-trending-q">{o.question}</div>
+                    <div className="dashboard-trending-meta">
+                      ↑ {o.upvotes || 0} · {o.views || 0} views · {o.answers?.length || 0} answers
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* My Q&A */}
+        {myOaqs.length > 0 && (
+          <div className="dashboard-section">
+            <h2>My Questions</h2>
+            <div className="dashboard-myoaqs">
+              {myOaqs.map(o => (
+                <div key={o._id} className="dashboard-myoaq-item" onClick={() => navigate('/community')}>
+                  <div className="dashboard-myoaq-q">{o.question}</div>
+                  <div className="dashboard-myoaq-meta">
+                    <span className={`home-status home-status--${o.status}`}>{o.status}</span>
+                    <span>{o.answers?.length || 0} answers</span>
+                    <span>{o.views || 0} views</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Quick links */}
         <div className="dashboard-section">
           <h2>Quick Links</h2>
           <div className="dashboard-links">

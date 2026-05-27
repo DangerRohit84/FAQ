@@ -17,6 +17,7 @@ router.get('/', async (req, res) => {
     }
     let sortOpt = { createdAt: -1 };
     if (sort === 'votes') sortOpt = { createdAt: -1 };
+    if (sort === 'trending') sortOpt = { createdAt: -1 };
     const oaqs = await OAQ.find(filter)
       .populate('submittedBy', 'name')
       .populate('answers.submittedBy', 'name')
@@ -57,20 +58,36 @@ router.get('/:id', async (req, res) => {
 /* ── Submit OAQ (with duplicate check) ── */
 router.post('/', auth, async (req, res) => {
   try {
-    const { question } = req.body;
+    const { question, description, category } = req.body;
     if (!question || !question.trim()) {
       return res.status(400).json({ error: 'Question is required' });
     }
 
     const q = question.toLowerCase().trim();
-    const regex = new RegExp(q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i');
-    const faqDupes = await FAQ.find({ 'questions.q': { $regex: regex } }).lean();
-    const oaqDupes = await OAQ.find({ question: { $regex: regex }, status: { $ne: 'rejected' } }).lean();
+    const words = q.split(/\s+/).filter(w => w.length > 2);
+    const wordRegexes = words.map(w => new RegExp(w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i'));
+
+    const [faqDupes, oaqDupes] = await Promise.all([
+      FAQ.find({ $or: wordRegexes.flatMap(r => [{ 'questions.q': r }, { 'questions.a': r }]) }).lean(),
+      OAQ.find({ $or: wordRegexes.map(r => ({ question: r })), status: { $ne: 'rejected' } }).lean(),
+    ]);
+
+    const score = (text) => {
+      const lower = text.toLowerCase();
+      const matched = words.filter(w => lower.includes(w)).length;
+      return matched / words.length;
+    };
 
     const allDupes = [
-      ...faqDupes.flatMap(c => c.questions.filter(item => regex.test(item.q)).map(i => ({ text: i.q, source: 'FAQ' }))),
-      ...oaqDupes.map(o => ({ text: o.question, source: 'OAQ', id: o._id })),
-    ];
+      ...faqDupes.flatMap(c =>
+        c.questions
+          .filter(item => score(item.q) > 0.4)
+          .map(i => ({ text: i.q, source: 'FAQ', score: score(i.q) }))
+      ),
+      ...oaqDupes
+        .filter(o => score(o.question) > 0.4)
+        .map(o => ({ text: o.question, source: 'OAQ', id: o._id, score: score(o.question) })),
+    ].sort((a, b) => b.score - a.score);
 
     if (allDupes.length > 0) {
       return res.status(409).json({ duplicates: allDupes });
@@ -78,6 +95,8 @@ router.post('/', auth, async (req, res) => {
 
     const oaq = await OAQ.create({
       question: question.trim(),
+      description: description?.trim() || '',
+      category: category?.trim() || '',
       submittedBy: req.user._id,
     });
     await oaq.populate('submittedBy', 'name');
@@ -216,6 +235,7 @@ router.put('/:id/promote', auth, admin, async (req, res) => {
     await communityCat.save();
 
     oaq.status = 'promoted';
+    oaq.promotedCount = (oaq.promotedCount || 0) + 1;
     await oaq.save();
 
     res.json({ message: 'Promoted to FAQ', oaq });

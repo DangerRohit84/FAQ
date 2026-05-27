@@ -15,12 +15,15 @@ answerSchema.set('toJSON', { virtuals: true });
 
 const oaqSchema = new mongoose.Schema({
   question: { type: String, required: true, trim: true },
+  description: { type: String, default: '' },
+  category: { type: String, default: '' },
   submittedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
   views: { type: Number, default: 0 },
   votedUpBy: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
   votedDownBy: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
   answers: [answerSchema],
   status: { type: String, enum: ['open', 'approved', 'promoted', 'rejected'], default: 'open' },
+  promotedCount: { type: Number, default: 0 },
 }, { timestamps: true });
 
 oaqSchema.virtual('upvotes').get(function() { return (this.votedUpBy || []).length; });

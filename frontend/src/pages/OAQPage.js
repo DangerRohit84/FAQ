@@ -3,18 +3,28 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import './OAQPage.css';
 
+const FAQ_CATEGORIES = [
+  'General', 'Registration', 'Program', 'Technical', 'Assignments',
+  'Mentorship', 'Certification', 'Placement', 'Funding', 'Schedule',
+  'Communication', 'Other',
+];
+
 function OAQPage() {
   const { user, authFetch } = useAuth();
   const navigate = useNavigate();
   const [oaqs, setOaqs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [newQuestion, setNewQuestion] = useState('');
+  const [newDescription, setNewDescription] = useState('');
+  const [newCategory, setNewCategory] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
   const [duplicates, setDuplicates] = useState([]);
-  const [sort, setSort] = useState('newest');
+  const [sort, setSort] = useState('trending');
   const [expandedId, setExpandedId] = useState(null);
   const [newAnswer, setNewAnswer] = useState('');
+  const [related, setRelated] = useState(null);
+  const [showForm, setShowForm] = useState(false);
 
   const fetchOaqs = useCallback(() => {
     setLoading(true);
@@ -36,7 +46,7 @@ function OAQPage() {
       const res = await authFetch('/api/oaq', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ question: newQuestion }),
+        body: JSON.stringify({ question: newQuestion, description: newDescription, category: newCategory }),
       });
       const data = await res.json();
       if (res.status === 409) {
@@ -45,9 +55,33 @@ function OAQPage() {
       }
       if (!res.ok) { setError(data.error); return; }
       setNewQuestion('');
+      setNewDescription('');
+      setNewCategory('');
+      setShowForm(false);
       fetchOaqs();
     } catch { setError('Connection error'); }
     finally { setSubmitting(false); }
+  };
+
+  const aiCheckDuplicates = async () => {
+    if (!newQuestion.trim() || newQuestion.length < 5) return;
+    const res = await fetch('/api/ai/check-duplicate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ question: newQuestion }),
+    });
+    if (res.ok) {
+      const data = await res.json();
+      setDuplicates(data.duplicates || []);
+    }
+  };
+
+  const fetchRelated = async (question) => {
+    const res = await fetch(`/api/ai/related?q=${encodeURIComponent(question)}`);
+    if (res.ok) {
+      const data = await res.json();
+      if (data.faq?.length || data.oaq?.length) setRelated(data);
+    }
   };
 
   const handleVote = async (id, value) => {
@@ -70,6 +104,10 @@ function OAQPage() {
     if (isOpening) {
       fetch(`/api/oaq/${id}/view`, { method: 'POST' }).catch(() => {});
       setOaqs(prev => prev.map(o => o._id === id ? { ...o, views: (o.views || 0) + 1 } : o));
+      const oaq = oaqs.find(o => o._id === id);
+      if (oaq) fetchRelated(oaq.question);
+    } else {
+      setRelated(null);
     }
   };
 
@@ -103,6 +141,14 @@ function OAQPage() {
 
   const formatDate = d => new Date(d).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
 
+  const getScore = o => (o.upvotes || 0) * 3 + (o.views || 0) * 0.5 + (o.answers?.length || 0) * 2;
+
+  const sortedOaqs = [...oaqs].sort((a, b) => {
+    if (sort === 'trending') return getScore(b) - getScore(a);
+    if (sort === 'votes') return (b.upvotes || 0) - (a.upvotes || 0);
+    return new Date(b.createdAt) - new Date(a.createdAt);
+  });
+
   return (
     <div className="oaq-page">
       <div className="oaq-container">
@@ -113,39 +159,65 @@ function OAQPage() {
 
         {/* Submit question */}
         <div className="oaq-submit-card">
-          <h2>Ask a question</h2>
-          <form onSubmit={handleSubmit}>
-            <textarea
-              className="oaq-textarea"
-              placeholder="What do you need help with? Be specific..."
-              value={newQuestion}
-              onChange={e => setNewQuestion(e.target.value)}
-              rows={3}
-            />
-            {error && <div className="oaq-error">{error}</div>}
-            {duplicates.length > 0 && (
-              <div className="oaq-duplicates">
-                <strong>Similar questions already exist:</strong>
-                <ul>
-                  {duplicates.map((d, i) => (
-                    <li key={i}>
-                      {d.source === 'FAQ' ? '📖 FAQ: ' : '💬 OAQ: '}
-                      {d.text}
-                    </li>
-                  ))}
-                </ul>
+          <div className="oaq-submit-header">
+            <h2>Ask a question</h2>
+            {!showForm && <button className="oaq-btn oaq-btn--primary" onClick={() => setShowForm(true)}>+ New question</button>}
+            {showForm && <button className="oaq-btn oaq-btn--ghost" onClick={() => { setShowForm(false); setDuplicates([]); setError(''); }}>Cancel</button>}
+          </div>
+          {showForm && (
+            <form onSubmit={handleSubmit}>
+              <textarea
+                className="oaq-textarea"
+                placeholder="What do you need help with? Be specific..."
+                value={newQuestion}
+                onChange={e => setNewQuestion(e.target.value)}
+                rows={3}
+                onBlur={aiCheckDuplicates}
+              />
+              <textarea
+                className="oaq-textarea oaq-textarea--sm"
+                placeholder="Add more details (optional)"
+                value={newDescription}
+                onChange={e => setNewDescription(e.target.value)}
+                rows={2}
+                style={{ marginTop: 8 }}
+              />
+              <div className="oaq-category-row">
+                <select
+                  className="oaq-select"
+                  value={newCategory}
+                  onChange={e => setNewCategory(e.target.value)}
+                >
+                  <option value="">Select category (optional)</option>
+                  {FAQ_CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
+                </select>
               </div>
-            )}
-            <button className="oaq-btn oaq-btn--primary" type="submit" disabled={submitting || !newQuestion.trim()}>
-              {submitting ? 'Submitting…' : 'Submit question'}
-            </button>
-          </form>
+              {error && <div className="oaq-error">{error}</div>}
+              {duplicates.length > 0 && (
+                <div className="oaq-duplicates">
+                  <strong>AI detected similar questions:</strong>
+                  <ul>
+                    {duplicates.map((d, i) => (
+                      <li key={i}>
+                        {d.source === 'FAQ' ? '📖 FAQ: ' : '💬 OAQ: '}
+                        {d.text}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+              <button className="oaq-btn oaq-btn--primary" type="submit" disabled={submitting || !newQuestion.trim()}>
+                {submitting ? 'Submitting…' : 'Submit question'}
+              </button>
+            </form>
+          )}
         </div>
 
         {/* Sort */}
         <div className="oaq-toolbar">
           <span className="oaq-count">{oaqs.length} question{oaqs.length !== 1 ? 's' : ''}</span>
           <div className="oaq-sort">
+            <button className={`oaq-sort-btn ${sort === 'trending' ? 'active' : ''}`} onClick={() => setSort('trending')}>Trending</button>
             <button className={`oaq-sort-btn ${sort === 'newest' ? 'active' : ''}`} onClick={() => setSort('newest')}>Newest</button>
             <button className={`oaq-sort-btn ${sort === 'votes' ? 'active' : ''}`} onClick={() => setSort('votes')}>Top voted</button>
           </div>
@@ -158,7 +230,7 @@ function OAQPage() {
           <div className="oaq-empty">No questions yet. Be the first to ask!</div>
         ) : (
           <div className="oaq-list">
-            {oaqs.map(oaq => (
+            {sortedOaqs.map(oaq => (
               <div key={oaq._id} className={`oaq-card ${oaq.status === 'approved' ? 'oaq-card--approved' : ''} ${oaq.status === 'promoted' ? 'oaq-card--promoted' : ''}`}>
                 <div className="oaq-card__vote">
                   <button className="oaq-vote-btn oaq-vote-btn--up" onClick={() => handleVote(oaq._id, 1)} title="Upvote">
@@ -177,11 +249,14 @@ function OAQPage() {
                     <h3 className="oaq-card__question">{oaq.question}</h3>
                     <span className={`oaq-status oaq-status--${oaq.status}`}>{oaq.status}</span>
                   </div>
+                  {oaq.description && <p className="oaq-card__desc">{oaq.description}</p>}
+                  {oaq.category && <span className="oaq-card__cat">{oaq.category}</span>}
                   <div className="oaq-card__meta">
                     <span>{oaq.submittedBy?.name || 'Anonymous'}</span>
                     <span>{formatDate(oaq.createdAt)}</span>
                     <span>{oaq.views || 0} view{(oaq.views || 0) !== 1 ? 's' : ''}</span>
                     <span>{oaq.answers.length} answer{oaq.answers.length !== 1 ? 's' : ''}</span>
+                    <span className="oaq-card__score">Score: {getScore(oaq).toFixed(0)}</span>
                   </div>
                   <button className="oaq-card__expand" onClick={() => toggleExpand(oaq._id)}>
                     {expandedId === oaq._id ? 'Hide answers' : `View ${oaq.answers.length} answer${oaq.answers.length !== 1 ? 's' : ''}`}
@@ -217,6 +292,24 @@ function OAQPage() {
                           </div>
                         </div>
                       ))}
+
+                      {/* Related questions */}
+                      {related && (
+                        <div className="oaq-related">
+                          <strong>Related questions:</strong>
+                          {related.faq?.length > 0 && related.faq.map(cat => cat.questions.map((item, i) => (
+                            <div key={i} className="oaq-related-item" onClick={() => navigate('/faq')}>
+                              📖 {item.q}
+                            </div>
+                          )))}
+                          {related.oaq?.length > 0 && related.oaq.map(o => (
+                            <div key={o._id} className="oaq-related-item" onClick={() => { setExpandedId(o._id); fetchRelated(o.question); }}>
+                              💬 {o.question}
+                            </div>
+                          ))}
+                        </div>
+                      )}
+
                       {oaq.status !== 'promoted' && oaq.status !== 'rejected' && (
                         <div className="oaq-answer-form">
                           <textarea

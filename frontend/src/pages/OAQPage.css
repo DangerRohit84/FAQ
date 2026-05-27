@@ -41,6 +41,13 @@
   font-size: 1.05rem;
   font-weight: 700;
   color: #0f172a;
+  margin: 0;
+}
+
+.oaq-submit-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
   margin-bottom: 12px;
 }
 
@@ -429,4 +436,94 @@
 .oaq-answer-form .oaq-btn {
   align-self: flex-end;
   margin-top: 0;
+}
+
+/* ---- Ghost button ---- */
+.oaq-btn--ghost {
+  background: none;
+  color: #64748b;
+  margin-top: 0;
+}
+
+.oaq-btn--ghost:hover {
+  color: #334155;
+}
+
+/* ---- Select / Category ---- */
+.oaq-select {
+  width: 100%;
+  padding: 10px 14px;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 10px;
+  font-size: 0.9rem;
+  font-family: inherit;
+  outline: none;
+  color: #1e293b;
+  background: white;
+  cursor: pointer;
+  transition: border-color 0.2s;
+}
+
+.oaq-select:focus {
+  border-color: #818cf8;
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+}
+
+.oaq-category-row {
+  margin-top: 8px;
+}
+
+/* ---- Description & Category on cards ---- */
+.oaq-card__desc {
+  font-size: 0.85rem;
+  color: #64748b;
+  line-height: 1.5;
+  margin: 4px 0 6px;
+}
+
+.oaq-card__cat {
+  display: inline-block;
+  font-size: 0.72rem;
+  font-weight: 500;
+  color: #4f46e5;
+  background: #eef2ff;
+  padding: 2px 8px;
+  border-radius: 6px;
+  margin-bottom: 6px;
+}
+
+.oaq-card__score {
+  color: #2563eb;
+  font-weight: 600;
+}
+
+/* ---- Related questions ---- */
+.oaq-related {
+  margin-top: 12px;
+  padding: 10px 14px;
+  background: #f8faff;
+  border: 1px solid #e0e7ff;
+  border-radius: 10px;
+  font-size: 0.85rem;
+}
+
+.oaq-related strong {
+  display: block;
+  margin-bottom: 6px;
+  color: #4f46e5;
+}
+
+.oaq-related-item {
+  padding: 6px 0;
+  cursor: pointer;
+  color: #334155;
+  transition: color 0.15s;
+}
+
+.oaq-related-item:hover {
+  color: #2563eb;
+}
+
+.oaq-related-item:not(:last-child) {
+  border-bottom: 1px solid #e2e8f0;
 }

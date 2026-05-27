@@ -3,6 +3,7 @@ const express = require('express');
 const cors = require('cors');
 const mongoose = require('mongoose');
 const FAQ = require('./models/FAQ');
+const OAQ = require('./models/OAQ');
 const authRoutes = require('./routes/auth');
 const oaqRoutes = require('./routes/oaq');
 const { auth } = require('./middleware/auth');
@@ -16,11 +17,12 @@ mongoose.connect(MONGO_URI)
   .catch(err => console.error('MongoDB connection error:', err.message));
 
 app.use(cors());
-app.use(express.json());
+app.use(express.json({ limit: '10mb' }));
 
 app.use('/api/auth', authRoutes);
 app.use('/api/oaq', oaqRoutes);
 
+/* ── FAQ listing ── */
 app.get('/api/faqs', async (req, res) => {
   try {
     const faqs = await FAQ.find().lean();
@@ -30,6 +32,7 @@ app.get('/api/faqs', async (req, res) => {
   }
 });
 
+/* ── Smart search with fuzzy matching ── */
 app.get('/api/faqs/search', async (req, res) => {
   try {
     const query = req.query.q?.toLowerCase() || '';
@@ -38,7 +41,9 @@ app.get('/api/faqs/search', async (req, res) => {
       return res.json(faqs);
     }
 
-    const regex = new RegExp(query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i');
+    const escaped = query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const fuzzy = escaped.split('').join('.*');
+    const regex = new RegExp(fuzzy, 'i');
     const faqs = await FAQ.find({
       $or: [
         { 'questions.q': { $regex: regex } },
@@ -48,9 +53,15 @@ app.get('/api/faqs/search', async (req, res) => {
 
     const results = faqs.map(cat => ({
       ...cat,
-      questions: cat.questions.filter(
-        item => regex.test(item.q) || regex.test(item.a)
-      ),
+      questions: cat.questions
+        .filter(item => regex.test(item.q) || regex.test(item.a))
+        .map(item => ({
+          ...item,
+          _relevance:
+            (item.q.toLowerCase().includes(query) ? 3 : 0) +
+            (item.a.toLowerCase().includes(query) ? 1 : 0),
+        }))
+        .sort((a, b) => b._relevance - a._relevance),
     })).filter(cat => cat.questions.length > 0);
 
     res.json(results);
@@ -72,13 +83,15 @@ app.post('/api/faqs/:catId/questions/:qId/view', async (req, res) => {
   }
 });
 
+/* ── Unified search (FAQ + OAQ) ── */
 app.get('/api/search/all', async (req, res) => {
   try {
     const query = req.query.q?.toLowerCase() || '';
     if (!query) return res.json({ faq: [], oaq: [] });
 
-    const regex = new RegExp(query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i');
-    const OAQ = require('./models/OAQ');
+    const escaped = query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const fuzzy = escaped.split('').join('.*');
+    const regex = new RegExp(fuzzy, 'i');
 
     const [faqResults, oaqResults] = await Promise.all([
       FAQ.find({ $or: [{ 'questions.q': { $regex: regex } }, { 'questions.a': { $regex: regex } }] }).lean(),
@@ -89,7 +102,15 @@ app.get('/api/search/all', async (req, res) => {
 
     const faq = faqResults.map(cat => ({
       ...cat,
-      questions: cat.questions.filter(item => regex.test(item.q) || regex.test(item.a)),
+      questions: cat.questions
+        .filter(item => regex.test(item.q) || regex.test(item.a))
+        .map(item => ({
+          ...item,
+          _relevance:
+            (item.q.toLowerCase().includes(query) ? 3 : 0) +
+            (item.a.toLowerCase().includes(query) ? 1 : 0),
+        }))
+        .sort((a, b) => b._relevance - a._relevance),
     })).filter(cat => cat.questions.length > 0);
 
     res.json({ faq, oaq: oaqResults });
@@ -98,23 +119,222 @@ app.get('/api/search/all', async (req, res) => {
   }
 });
 
+/* ── Search suggestions (typo-tolerant) ── */
+app.get('/api/search/suggest', async (req, res) => {
+  try {
+    const query = req.query.q?.toLowerCase() || '';
+    if (!query || query.length < 2) return res.json([]);
+
+    const escaped = query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const allQas = await FAQ.aggregate([
+      { $unwind: '$questions' },
+      { $project: { _id: 0, cat: '$category', q: '$questions.q', a: '$questions.a' } },
+    ]);
+
+    const oaqs = await OAQ.find({ status: { $ne: 'rejected' } }).select('question').lean();
+
+    const suggestions = [];
+
+    for (const item of allQas) {
+      if (item.q.toLowerCase().includes(escaped)) suggestions.push({ text: item.q, type: 'FAQ', cat: item.cat });
+      else if (item.a.toLowerCase().includes(escaped)) suggestions.push({ text: item.a.slice(0, 80), type: 'FAQ', cat: item.cat });
+    }
+
+    for (const item of oaqs) {
+      if (item.question.toLowerCase().includes(escaped)) suggestions.push({ text: item.question, type: 'OAQ' });
+    }
+
+    const seen = new Set();
+    const unique = suggestions.filter(s => {
+      const key = s.text.toLowerCase();
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+
+    res.json(unique.slice(0, 8));
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+/* ── Homepage dashboard (public) ── */
+app.get('/api/home', async (req, res) => {
+  try {
+    const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+    const monthAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+
+    const [categories, totalQuestions, faqData, trendingOaqs, latestOaqs, kbStats] = await Promise.all([
+      FAQ.countDocuments(),
+      FAQ.aggregate([{ $unwind: '$questions' }, { $count: 'total' }]),
+      FAQ.find().select('category icon questions.q questions._id questions.views').lean(),
+      OAQ.find({ createdAt: { $gte: sevenDaysAgo }, status: { $ne: 'rejected' } })
+        .populate('submittedBy', 'name')
+        .lean({ virtuals: true }),
+      OAQ.find({ status: { $ne: 'rejected' } })
+        .sort({ createdAt: -1 })
+        .limit(5)
+        .populate('submittedBy', 'name')
+        .lean({ virtuals: true }),
+      OAQ.aggregate([
+        { $match: { status: 'promoted' } },
+        { $group: { _id: null, count: { $sum: 1 }, totalVotes: { $sum: { $size: { $ifNull: ['$votedUpBy', []] } } } } },
+      ]),
+    ]);
+
+    const categoryCards = faqData.map(c => ({
+      _id: c._id,
+      category: c.category,
+      icon: c.icon,
+      count: c.questions.length,
+    }));
+
+    const trending = trendingOaqs
+      .map(o => ({
+        ...o,
+        _score: (o.upvotes || 0) * 3 + (o.views || 0) * 0.5 + (o.answers?.length || 0) * 2,
+      }))
+      .sort((a, b) => b._score - a._score)
+      .slice(0, 5);
+
+    const promotedCount = kbStats[0]?.count || 0;
+    const promotedVotes = kbStats[0]?.totalVotes || 0;
+
+    res.json({
+      stats: {
+        categories,
+        questions: totalQuestions[0]?.total || 0,
+        openOaqs: await OAQ.countDocuments({ status: 'open' }),
+        promotedCount,
+        promotedVotes,
+      },
+      categoryCards,
+      trending,
+      latest: latestOaqs,
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+/* ── Authenticated dashboard ── */
 app.get('/api/dashboard', auth, async (req, res) => {
   try {
-    const totalFaqs = await FAQ.aggregate([
-      { $unwind: '$questions' },
-      { $count: 'total' },
+    const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+
+    const [totalFaqs, categories, openOaqs, trendingOaqs, userOaqs, kbStats] = await Promise.all([
+      FAQ.aggregate([{ $unwind: '$questions' }, { $count: 'total' }]),
+      FAQ.countDocuments(),
+      OAQ.countDocuments({ status: 'open' }),
+      OAQ.find({ createdAt: { $gte: sevenDaysAgo }, status: { $ne: 'rejected' } })
+        .populate('submittedBy', 'name')
+        .lean({ virtuals: true }),
+      OAQ.find({ submittedBy: req.user._id }).sort({ createdAt: -1 }).limit(5).lean({ virtuals: true }),
+      OAQ.aggregate([
+        { $match: { status: 'promoted' } },
+        { $group: { _id: null, count: { $sum: 1 }, totalVotes: { $sum: { $size: { $ifNull: ['$votedUpBy', []] } } } } },
+      ]),
     ]);
-    const categories = await FAQ.countDocuments();
-    const OAQ = require('./models/OAQ');
-    const openOaqs = await OAQ.countDocuments({ status: 'open' });
+
+    const trending = trendingOaqs
+      .map(o => ({
+        ...o,
+        _score: (o.upvotes || 0) * 3 + (o.views || 0) * 0.5 + (o.answers?.length || 0) * 2,
+      }))
+      .sort((a, b) => b._score - a._score)
+      .slice(0, 5);
+
+    const promotedCount = kbStats[0]?.count || 0;
+    const promotedVotes = kbStats[0]?.totalVotes || 0;
+
     res.json({
       user: req.user,
       stats: {
         categories,
         questions: totalFaqs[0]?.total || 0,
         openOaqs,
+        promotedCount,
+        promotedVotes,
       },
+      trending,
+      myOaqs: userOaqs,
     });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+/* ── AI: Related recommendations ── */
+app.get('/api/ai/related', async (req, res) => {
+  try {
+    const query = req.query.q?.toLowerCase() || '';
+    if (!query || query.length < 2) return res.json({ faq: [], oaq: [] });
+
+    const words = query.split(/\s+/).filter(w => w.length > 2);
+    const wordRegexes = words.map(w => new RegExp(w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i'));
+
+    const [faqMatches, oaqMatches] = await Promise.all([
+      FAQ.find({ $or: wordRegexes.flatMap(r => [{ 'questions.q': r }, { 'questions.a': r }]) }).lean(),
+      OAQ.find({
+        $or: wordRegexes.flatMap(r => [{ question: r }, { description: r }]),
+        status: { $ne: 'rejected' },
+      }).populate('submittedBy', 'name').lean({ virtuals: true }),
+    ]);
+
+    const faq = faqMatches.map(cat => ({
+      ...cat,
+      questions: cat.questions.filter(item =>
+        words.some(w => {
+          const r = new RegExp(w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i');
+          return r.test(item.q) || r.test(item.a);
+        })
+      ),
+    })).filter(cat => cat.questions.length > 0);
+
+    res.json({ faq, oaq: oaqMatches.slice(0, 5) });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+/* ── AI: Check duplicates ── */
+app.post('/api/ai/check-duplicate', async (req, res) => {
+  try {
+    const { question } = req.body;
+    if (!question || !question.trim()) return res.json({ duplicates: [] });
+
+    const q = question.toLowerCase().trim();
+    const words = q.split(/\s+/).filter(w => w.length > 2);
+    if (words.length === 0) return res.json({ duplicates: [] });
+
+    const wordRegexes = words.map(w => new RegExp(w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i'));
+
+    const [faqDupes, oaqDupes] = await Promise.all([
+      FAQ.find({ $or: wordRegexes.flatMap(r => [{ 'questions.q': r }, { 'questions.a': r }]) }).lean(),
+      OAQ.find({ $or: wordRegexes.map(r => ({ question: r })), status: { $ne: 'rejected' } }).lean(),
+    ]);
+
+    const score = (text) => {
+      const lower = text.toLowerCase();
+      const qWords = q.split(/\s+/);
+      const matched = qWords.filter(w => lower.includes(w)).length;
+      return matched / qWords.length;
+    };
+
+    const duplicates = [
+      ...faqDupes.flatMap(c =>
+        c.questions
+          .filter(item => score(item.q) > 0.4)
+          .map(i => ({ text: i.q, source: 'FAQ', score: score(i.q) }))
+      ),
+      ...oaqDupes
+        .filter(o => score(o.question) > 0.4)
+        .map(o => ({ text: o.question, source: 'OAQ', id: o._id, score: score(o.question) })),
+    ]
+      .sort((a, b) => b.score - a.score)
+      .slice(0, 5);
+
+    res.json({ duplicates });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

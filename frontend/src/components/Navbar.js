@@ -19,7 +19,8 @@ function Navbar() {
           <span>FAQ Portal</span>
         </Link>
         <div className="navbar-links">
-          <Link to="/" className="navbar-link">FAQ</Link>
+          <Link to="/" className="navbar-link">Home</Link>
+          <Link to="/faq" className="navbar-link">FAQ</Link>
           <Link to="/community" className="navbar-link">Community</Link>
           {user ? (
             <>
