@@ -2,6 +2,7 @@ import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import ThemeToggle from './ThemeToggle';
+import NotificationBell from './NotificationBell';
 import './Navbar.css';
 
 function Navbar() {
@@ -37,8 +38,11 @@ function Navbar() {
             </>
           )}
         </div>
-        <div className="navbar-lamp">
-          <ThemeToggle />
+        <div className="navbar-right">
+          <NotificationBell />
+          <div className="navbar-lamp">
+            <ThemeToggle />
+          </div>
         </div>
       </div>
     </nav>

@@ -85,6 +85,12 @@
   color: white;
 }
 
+.navbar-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
 .navbar-lamp {
   position: absolute;
   right: 8px;
@@ -103,6 +109,9 @@
   .navbar-link {
     padding: 6px 10px;
     font-size: 0.82rem;
+  }
+  .navbar-right {
+    gap: 4px;
   }
   .navbar-lamp {
     right: 0;

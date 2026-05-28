@@ -2,6 +2,7 @@ const express = require('express');
 const mongoose = require('mongoose');
 const OAQ = require('../models/OAQ');
 const FAQ = require('../models/FAQ');
+const Notification = require('../models/Notification');
 const { auth } = require('../middleware/auth');
 const { admin } = require('../middleware/admin');
 
@@ -122,6 +123,15 @@ router.post('/:id/answers', auth, async (req, res) => {
     oaq.answers.push({ text: text.trim(), submittedBy: req.user._id });
     await oaq.save();
 
+    if (oaq.submittedBy.toString() !== req.user._id.toString()) {
+      await Notification.create({
+        user: oaq.submittedBy,
+        type: 'answer',
+        message: `${req.user.name} answered your question: "${oaq.question.slice(0, 60)}${oaq.question.length > 60 ? '…' : ''}"`,
+        link: '/community',
+      });
+    }
+
     const updated = await OAQ.findById(oaq._id)
       .populate('submittedBy', 'name')
       .populate('answers.submittedBy', 'name');
@@ -162,6 +172,32 @@ router.post('/:id/vote', auth, async (req, res) => {
     }
 
     await oaq.save();
+
+    /* ── Auto-promote ── */
+    const netVotes = (oaq.votedUpBy || []).length - (oaq.votedDownBy || []).length;
+    if (netVotes >= 10 && oaq.status === 'approved') {
+      const bestAnswer = oaq.answers.find(a => a.accepted) ||
+        oaq.answers.sort((a, b) => (b.votedUpBy.length - b.votedDownBy.length) - (a.votedUpBy.length - a.votedDownBy.length))[0];
+      const answerText = bestAnswer ? bestAnswer.text : oaq.question;
+
+      let communityCat = await FAQ.findOne({ category: 'Community Questions' });
+      if (!communityCat) {
+        communityCat = await FAQ.create({ category: 'Community Questions', icon: '🌐', questions: [] });
+      }
+      communityCat.questions.push({ q: oaq.question, a: answerText, source: 'community', resolved: true });
+      await communityCat.save();
+
+      oaq.status = 'promoted';
+      oaq.promotedCount = (oaq.promotedCount || 0) + 1;
+      await oaq.save();
+
+      await Notification.create({
+        user: oaq.submittedBy,
+        type: 'promoted',
+        message: `Your question was auto-promoted to FAQ: "${oaq.question.slice(0, 60)}${oaq.question.length > 60 ? '…' : ''}"`,
+        link: '/faq',
+      });
+    }
 
     const updated = await OAQ.findById(oaq._id)
       .populate('submittedBy', 'name')
@@ -222,6 +258,14 @@ router.put('/:id/approve', auth, admin, async (req, res) => {
       .populate('submittedBy', 'name')
       .populate('answers.submittedBy', 'name');
     if (!oaq) return res.status(404).json({ error: 'Not found' });
+
+    await Notification.create({
+      user: oaq.submittedBy._id,
+      type: 'approved',
+      message: `Your question was approved: "${oaq.question.slice(0, 60)}${oaq.question.length > 60 ? '…' : ''}"`,
+      link: '/community',
+    });
+
     res.json(oaq);
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -235,6 +279,14 @@ router.put('/:id/reject', auth, admin, async (req, res) => {
       .populate('submittedBy', 'name')
       .populate('answers.submittedBy', 'name');
     if (!oaq) return res.status(404).json({ error: 'Not found' });
+
+    await Notification.create({
+      user: oaq.submittedBy._id,
+      type: 'system',
+      message: `Your question was rejected: "${oaq.question.slice(0, 60)}${oaq.question.length > 60 ? '…' : ''}"`,
+      link: '/community',
+    });
+
     res.json(oaq);
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -271,6 +323,13 @@ router.put('/:id/promote', auth, admin, async (req, res) => {
     oaq.status = 'promoted';
     oaq.promotedCount = (oaq.promotedCount || 0) + 1;
     await oaq.save();
+
+    await Notification.create({
+      user: oaq.submittedBy._id,
+      type: 'promoted',
+      message: `Your question was promoted to FAQ: "${oaq.question.slice(0, 60)}${oaq.question.length > 60 ? '…' : ''}"`,
+      link: '/faq',
+    });
 
     res.json({ message: 'Promoted to FAQ', oaq });
   } catch (err) {
@@ -309,6 +368,15 @@ router.put('/:id/answers/:answerId/accept', auth, admin, async (req, res) => {
 
     answer.accepted = !answer.accepted;
     await oaq.save();
+
+    if (answer.accepted && answer.submittedBy) {
+      await Notification.create({
+        user: answer.submittedBy,
+        type: 'accepted',
+        message: `Your answer was accepted on: "${oaq.question.slice(0, 60)}${oaq.question.length > 60 ? '…' : ''}"`,
+        link: '/community',
+      });
+    }
 
     const updated = await OAQ.findById(oaq._id)
       .populate('submittedBy', 'name')
