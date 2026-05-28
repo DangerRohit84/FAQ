@@ -85,7 +85,7 @@ function AdminPage() {
 
   const canPromote = oaq => oaq.netVotes >= 10;
 
-  const handleReportAction = async (id, action) => {
+  const handleReportAction = async (id, action, oaqId) => {
     const res = await fetch(`/api/reports/${id}/resolve`, {
       method: 'PUT',
       headers: {
@@ -94,7 +94,15 @@ function AdminPage() {
       },
       body: JSON.stringify({ action }),
     });
-    if (res.ok) fetchOaqs();
+    if (res.ok) {
+      if (action === 'dismissed' && oaqId) {
+        await fetch(`/api/oaq/${oaqId}/reject`, {
+          method: 'PUT',
+          headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
+        });
+      }
+      fetchOaqs();
+    }
   };
 
   const handleDeleteReported = async id => {
@@ -199,8 +207,8 @@ function AdminPage() {
                     <div className="admin-card__actions">
                       {r.status === 'pending' && (
                         <>
-                          <button className="admin-btn admin-btn--approve" onClick={() => handleReportAction(r._id, 'resolved')}>Resolve</button>
-                          <button className="admin-btn admin-btn--reject" onClick={() => handleReportAction(r._id, 'dismissed')}>Dismiss</button>
+                          <button className="admin-btn admin-btn--approve" onClick={() => handleReportAction(r._id, 'resolved', r.oaqId)}>Resolve</button>
+                          <button className="admin-btn admin-btn--reject" onClick={() => handleReportAction(r._id, 'dismissed', r.oaqId)}>Dismiss</button>
                           <button className="admin-btn admin-btn--danger" onClick={() => handleDeleteReported(r._id)}>Delete content</button>
                         </>
                       )}
