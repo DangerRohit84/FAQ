@@ -191,7 +191,7 @@ app.get('/api/home', async (req, res) => {
       category: c.category,
       icon: c.icon,
       count: c.questions.length,
-      questions: c.questions.map(q => ({ _id: q._id, q: q.q, views: q.views })),
+      questions: (c.questions || []).map(q => ({ _id: q._id, q: q.q, views: q.views })),
     }));
 
     const trending = trendingOaqs

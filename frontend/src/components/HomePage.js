@@ -374,11 +374,11 @@ function HomePage() {
                 <span className="home-cat-modal__count">{selectedCat.count} question{selectedCat.count !== 1 ? 's' : ''}</span>
               </div>
               <div className="home-cat-modal__body">
-                {selectedCat.questions.length === 0 ? (
+                {!selectedCat.questions || selectedCat.questions.length === 0 ? (
                   <p className="home-cat-modal__empty">No questions in this category yet.</p>
                 ) : (
                   <div className="home-cat-questions">
-                    {selectedCat.questions.map((item, idx) => (
+                    {(selectedCat.questions || []).map((item, idx) => (
                       <div key={item._id} className="home-cat-question">
                         <span className="home-cat-question__num">{idx + 1}</span>
                         <span className="home-cat-question__text">{item.q}</span>
