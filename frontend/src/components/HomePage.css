@@ -87,7 +87,7 @@
   display: flex;
   flex: 1;
   align-items: center;
-  background: var(--bg-card);
+  background: #fff;
   border-radius: 14px;
   padding: 0 18px;
   box-shadow: var(--shadow-lg);
@@ -175,6 +175,18 @@
 [data-theme="dark"] .home-ask-btn:hover {
   background: #e0e7ff;
   box-shadow: 0 4px 14px rgba(129, 140, 248, 0.35);
+}
+
+[data-theme="dark"] .home-search {
+  background: #fff;
+}
+
+[data-theme="dark"] .home-search-input {
+  color: #1e293b;
+}
+
+[data-theme="dark"] .home-search-input::placeholder {
+  color: #94a3b8;
 }
 
 .home-search-mic {
