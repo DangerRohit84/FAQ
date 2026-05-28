@@ -15,6 +15,7 @@ function HomePage() {
   const [listening, setListening] = useState(false);
   const [selectedCat, setSelectedCat] = useState(null);
   const [flipping, setFlipping] = useState(null);
+  const [catOpenItems, setCatOpenItems] = useState({});
   const searchTimer = useRef(null);
   const suggestTimer = useRef(null);
   const searchInputRef = useRef(null);
@@ -363,9 +364,9 @@ function HomePage() {
 
         {/* Category modal */}
         {selectedCat && (
-          <div className="home-cat-overlay" onClick={() => setSelectedCat(null)}>
+          <div className="home-cat-overlay" onClick={() => { setSelectedCat(null); setCatOpenItems({}); }}>
             <div className="home-cat-modal" onClick={e => e.stopPropagation()}>
-              <button className="home-cat-close" onClick={() => setSelectedCat(null)}>
+              <button className="home-cat-close" onClick={() => { setSelectedCat(null); setCatOpenItems({}); }}>
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M18 6 6 18M6 6l12 12" /></svg>
               </button>
               <div className="home-cat-modal__header">
@@ -378,18 +379,31 @@ function HomePage() {
                   <p className="home-cat-modal__empty">No questions in this category yet.</p>
                 ) : (
                   <div className="home-cat-questions">
-                    {(selectedCat.questions || []).map((item, idx) => (
-                      <div key={item._id} className="home-cat-question">
-                        <span className="home-cat-question__num">{idx + 1}</span>
-                        <span className="home-cat-question__text">{item.q}</span>
-                        <span className="home-cat-question__views">{item.views || 0} views</span>
-                      </div>
+                    {selectedCat.questions.map((item, idx) => (
+                      <FAQItem
+                        key={item._id}
+                        number={idx + 1}
+                        question={item.q}
+                        answer={item.a}
+                        views={item.views || 0}
+                        catId={selectedCat._id}
+                        qId={item._id}
+                        isOpen={!!catOpenItems[item._id]}
+                        onToggle={() => setCatOpenItems(prev => ({ ...prev, [item._id]: !prev[item._id] }))}
+                        onView={() => {
+                          setSelectedCat(prev => {
+                            if (!prev) return prev;
+                            const updated = { ...prev, questions: prev.questions.map(q => q._id === item._id ? { ...q, views: (q.views || 0) + 1 } : q) };
+                            return updated;
+                          });
+                        }}
+                      />
                     ))}
                   </div>
                 )}
               </div>
               <div className="home-cat-modal__footer">
-                <button className="home-cat-modal__btn" onClick={() => { setSelectedCat(null); navigate('/faq'); }}>
+                <button className="home-cat-modal__btn" onClick={() => { setSelectedCat(null); setCatOpenItems({}); navigate('/faq'); }}>
                   View all in FAQ
                 </button>
               </div>
