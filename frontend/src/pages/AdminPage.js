@@ -108,6 +108,7 @@ function AdminPage() {
     setAiResult(prev => ({ ...prev, [oaqId]: null }));
     try {
       const res = await fetch(`/api/ai/summarize/${oaqId}`, {
+        method: 'POST',
         headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
       });
       if (res.ok) {
