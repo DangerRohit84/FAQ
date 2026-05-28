@@ -15,6 +15,7 @@ function OAQPage() {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
   const [duplicates, setDuplicates] = useState([]);
+  const [outOfScope, setOutOfScope] = useState(false);
   const [sort, setSort] = useState('trending');
   const [expandedId, setExpandedId] = useState(null);
   const [newAnswer, setNewAnswer] = useState('');
@@ -50,6 +51,7 @@ function OAQPage() {
     if (!user) return navigate('/login');
     setError('');
     setDuplicates([]);
+    setOutOfScope(false);
     setSubmitting(true);
     try {
       const res = await authFetch('/api/oaq', {
@@ -74,6 +76,7 @@ function OAQPage() {
 
   const aiCheckDuplicates = async () => {
     if (!newQuestion.trim() || newQuestion.length < 5) return;
+    setOutOfScope(false);
     const res = await fetch('/api/ai/check-duplicate', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -82,6 +85,7 @@ function OAQPage() {
     if (res.ok) {
       const data = await res.json();
       setDuplicates(data.duplicates || []);
+      setOutOfScope(data.outOfScope || false);
     }
   };
 
@@ -200,7 +204,7 @@ function OAQPage() {
           <div className="oaq-submit-header">
             <h2>Ask a question</h2>
             {!showForm && <button className="oaq-btn oaq-btn--primary" onClick={() => setShowForm(true)}>+ New question</button>}
-            {showForm && <button className="oaq-btn oaq-btn--ghost" onClick={() => { setShowForm(false); setDuplicates([]); setError(''); }}>Cancel</button>}
+            {showForm && <button className="oaq-btn oaq-btn--ghost" onClick={() => { setShowForm(false); setDuplicates([]); setOutOfScope(false); setError(''); }}>Cancel</button>}
           </div>
           {showForm && (
             <form onSubmit={handleSubmit}>
@@ -243,6 +247,11 @@ function OAQPage() {
                       </li>
                     ))}
                   </ul>
+                </div>
+              )}
+              {outOfScope && duplicates.length === 0 && (
+                <div className="oaq-outscope">
+                  ⚠️ This question doesn't seem related to the Vicharanashala Internship FAQ topics. It may not get relevant answers from the community.
                 </div>
               )}
               <button className="oaq-btn oaq-btn--primary" type="submit" disabled={submitting || !newQuestion.trim()}>

@@ -308,24 +308,34 @@ app.get('/api/ai/related', async (req, res) => {
 app.post('/api/ai/check-duplicate', async (req, res) => {
   try {
     const { question } = req.body;
-    if (!question || !question.trim()) return res.json({ duplicates: [] });
+    if (!question || !question.trim()) return res.json({ duplicates: [], outOfScope: false });
 
     const q = question.toLowerCase().trim();
     const words = q.split(/\s+/).filter(w => w.length > 2);
-    if (words.length === 0) return res.json({ duplicates: [] });
+    if (words.length === 0) return res.json({ duplicates: [], outOfScope: false });
 
-    const wordRegexes = words.map(w => new RegExp(w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i'));
+    /* fuzzy char-level regex — same as FAQ search */
+    const fuzzyTerms = words.map(w => new RegExp(w.split('').join('.*'), 'i'));
+    const exactWords = words.map(w => new RegExp(w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i'));
 
     const [faqDupes, oaqDupes] = await Promise.all([
-      FAQ.find({ $or: wordRegexes.flatMap(r => [{ 'questions.q': r }, { 'questions.a': r }]) }).lean(),
-      OAQ.find({ $or: wordRegexes.map(r => ({ question: r })), status: { $ne: 'rejected' } }).lean(),
+      FAQ.find({ $or: exactWords.flatMap(r => [{ 'questions.q': r }, { 'questions.a': r }]) }).lean(),
+      OAQ.find({ $or: exactWords.map(r => ({ question: r })), status: { $ne: 'rejected' } }).lean(),
     ]);
 
+    /* fuzzy word-overlap score using full question */
+    const allQWords = q.split(/\s+/);
     const score = (text) => {
       const lower = text.toLowerCase();
-      const qWords = q.split(/\s+/);
-      const matched = qWords.filter(w => lower.includes(w)).length;
-      return matched / qWords.length;
+      const matched = allQWords.filter(w => lower.includes(w)).length;
+      return matched / allQWords.length;
+    };
+
+    /* fuzzy char-overlap score for out-of-scope detection */
+    const fuzzyScore = (text) => {
+      const lower = text.toLowerCase();
+      const matches = fuzzyTerms.filter(reg => reg.test(lower));
+      return matches.length / words.length;
     };
 
     const duplicates = [
@@ -341,7 +351,16 @@ app.post('/api/ai/check-duplicate', async (req, res) => {
       .sort((a, b) => b.score - a.score)
       .slice(0, 5);
 
-    res.json({ duplicates });
+    /* check if question is out of scope — fuzzy-match against ALL FAQ text */
+    const allFaqTexts = faqDupes.flatMap(c => c.questions.map(item => item.q + ' ' + item.a));
+    let bestFuzzy = 0;
+    for (const text of allFaqTexts) {
+      const fs = fuzzyScore(text);
+      if (fs > bestFuzzy) bestFuzzy = fs;
+    }
+    const outOfScope = bestFuzzy < 0.2 && duplicates.length === 0;
+
+    res.json({ duplicates, outOfScope });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

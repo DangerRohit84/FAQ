@@ -73,10 +73,20 @@ router.post('/', auth, async (req, res) => {
       OAQ.find({ $or: wordRegexes.map(r => ({ question: r })), status: { $ne: 'rejected' } }).lean(),
     ]);
 
+    /* score using ALL words in the question */
+    const allQWords = q.split(/\s+/);
     const score = (text) => {
       const lower = text.toLowerCase();
-      const matched = words.filter(w => lower.includes(w)).length;
-      return matched / words.length;
+      const matched = allQWords.filter(w => lower.includes(w)).length;
+      return matched / allQWords.length;
+    };
+
+    /* fuzzy char-level score for out-of-scope detection */
+    const fuzzyTerms = words.map(w => new RegExp(w.split('').join('.*'), 'i'));
+    const fuzzyScore = (text) => {
+      const lower = text.toLowerCase();
+      const matches = fuzzyTerms.filter(reg => reg.test(lower));
+      return matches.length / words.length;
     };
 
     const allDupes = [
@@ -90,8 +100,20 @@ router.post('/', auth, async (req, res) => {
         .map(o => ({ text: o.question, source: 'OAQ', id: o._id, score: score(o.question) })),
     ].sort((a, b) => b.score - a.score);
 
+    /* out-of-scope detection */
+    let outOfScope = false;
+    if (allDupes.length === 0) {
+      const allFaqTexts = faqDupes.flatMap(c => c.questions.map(item => item.q + ' ' + item.a));
+      let bestFuzzy = 0;
+      for (const text of allFaqTexts) {
+        const fs = fuzzyScore(text);
+        if (fs > bestFuzzy) bestFuzzy = fs;
+      }
+      outOfScope = bestFuzzy < 0.2;
+    }
+
     if (allDupes.length > 0) {
-      return res.status(409).json({ duplicates: allDupes });
+      return res.status(409).json({ duplicates: allDupes, outOfScope });
     }
 
     const oaq = await OAQ.create({
