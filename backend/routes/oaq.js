@@ -99,6 +99,7 @@ router.post('/', auth, async (req, res) => {
         .filter(o => score(o.question) > 0.4)
         .map(o => ({ text: o.question, source: 'OAQ', id: o._id, score: score(o.question) })),
     ].sort((a, b) => b.score - a.score);
+    const topDupes = allDupes.slice(0, 1);
 
     /* out-of-scope detection */
     let outOfScope = false;
@@ -112,8 +113,8 @@ router.post('/', auth, async (req, res) => {
       outOfScope = bestFuzzy < 0.2;
     }
 
-    if (allDupes.length > 0) {
-      return res.status(409).json({ duplicates: allDupes, outOfScope });
+    if (topDupes.length > 0) {
+      return res.status(409).json({ duplicates: topDupes, outOfScope });
     }
 
     const oaq = await OAQ.create({

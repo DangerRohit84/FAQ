@@ -352,7 +352,7 @@ app.post('/api/ai/check-duplicate', async (req, res) => {
         .map(o => ({ text: o.question, source: 'OAQ', id: o._id, score: score(o.question) })),
     ]
       .sort((a, b) => b.score - a.score)
-      .slice(0, 5);
+      .slice(0, 1);
 
     /* check if question is out of scope — fuzzy-match against ALL FAQ text */
     const allFaqTexts = faqDupes.flatMap(c => c.questions.map(item => item.q + ' ' + item.a));

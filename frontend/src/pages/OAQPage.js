@@ -238,7 +238,7 @@ function OAQPage() {
               {error && <div className="oaq-error">{error}</div>}
               {duplicates.length > 0 && (
                 <div className="oaq-duplicates">
-                  <strong>AI detected similar questions:</strong>
+                  <strong>AI found a similar question:</strong>
                   <ul>
                     {duplicates.map((d, i) => (
                       <li key={i}>
