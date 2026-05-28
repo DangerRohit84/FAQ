@@ -171,7 +171,7 @@ app.get('/api/home', async (req, res) => {
     const [categories, totalQuestions, faqData, trendingOaqs, latestOaqs, kbStats] = await Promise.all([
       FAQ.countDocuments(),
       FAQ.aggregate([{ $unwind: '$questions' }, { $count: 'total' }]),
-      FAQ.find().select('category icon questions.q questions._id questions.views').lean(),
+      FAQ.find().select('category icon questions.q questions.a questions._id questions.source questions.resolved questions.views').lean(),
       OAQ.find({ createdAt: { $gte: sevenDaysAgo }, status: { $ne: 'rejected' } })
         .populate('submittedBy', 'name')
         .lean({ virtuals: true }),
