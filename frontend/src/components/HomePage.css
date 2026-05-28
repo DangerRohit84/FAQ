@@ -431,6 +431,7 @@
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
   gap: 14px;
+  perspective: 800px;
 }
 
 .home-category-card {
@@ -442,6 +443,8 @@
   border: 1px solid var(--border);
   transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s;
   animation: fadeUp 0.4s ease both;
+  transform-style: preserve-3d;
+  backface-visibility: hidden;
 }
 
 @keyframes fadeUp {
@@ -477,9 +480,10 @@
 }
 
 @keyframes cardFlip {
-  0% { transform: scale(1) rotateY(0); }
-  50% { transform: scale(0.95) rotateY(90deg); }
-  100% { transform: scale(1) rotateY(0); }
+  0% { transform: scale(1) rotateY(0deg); }
+  40% { transform: scale(0.9) rotateY(80deg); }
+  70% { transform: scale(0.95) rotateY(-10deg); }
+  100% { transform: scale(1) rotateY(0deg); }
 }
 
 /* ── Category modal ── */
