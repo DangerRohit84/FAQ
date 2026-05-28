@@ -15,9 +15,12 @@ function AuthProvider({ children }) {
     fetch('/api/auth/me', {
       headers: { Authorization: `Bearer ${token}` },
     })
-      .then(res => res.ok ? res.json() : Promise.reject())
-      .then(data => { setUser(data.user); setLoading(false); })
-      .catch(() => { logout(); setLoading(false); });
+      .then(res => {
+        if (res.ok) return res.json().then(data => { setUser(data.user); setLoading(false); });
+        if (res.status === 401) { logout(); setLoading(false); return; }
+        setLoading(false);
+      })
+      .catch(() => { setLoading(false); });
   }, [token]);
 
   const login = useCallback((newToken, userData) => {

@@ -12,7 +12,7 @@ const TABS = [
 ];
 
 function AdminPage() {
-  const { user, authFetch } = useAuth();
+  const { user, loading: authLoading, authFetch } = useAuth();
   const navigate = useNavigate();
   const [oaqs, setOaqs] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -27,9 +27,10 @@ function AdminPage() {
   const [aiCheckLoading, setAiCheckLoading] = useState(null);
 
   useEffect(() => {
+    if (authLoading) return;
     if (user && user.role !== 'admin') navigate('/');
     if (!user) navigate('/login');
-  }, [user]);
+  }, [user, authLoading]);
 
   const fetchOaqs = useCallback(() => {
     if (activeTab === 'reports') {
