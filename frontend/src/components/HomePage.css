@@ -168,13 +168,13 @@
 }
 
 [data-theme="dark"] .home-ask-btn {
-  background: var(--accent);
-  color: #fff;
+  background: #fff;
+  color: var(--accent);
 }
 
 [data-theme="dark"] .home-ask-btn:hover {
-  background: #6366f1;
-  box-shadow: 0 4px 14px rgba(99, 102, 241, 0.35);
+  background: #e0e7ff;
+  box-shadow: 0 4px 14px rgba(129, 140, 248, 0.35);
 }
 
 .home-search-mic {
