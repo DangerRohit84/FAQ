@@ -3,7 +3,7 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 const ThemeContext = createContext(null);
 
 function ThemeProvider({ children }) {
-  const [dark, setDark] = useState(() => localStorage.getItem('theme') === 'dark');
+  const [dark, setDark] = useState(false);
 
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', dark ? 'dark' : 'light');
