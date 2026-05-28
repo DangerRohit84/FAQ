@@ -1,8 +1,10 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import FAQItem from './FAQItem';
 import './FAQPage.css';
 
 function FAQPage() {
+  const navigate = useNavigate();
   const [faqData, setFaqData] = useState([]);
   const [searchResults, setSearchResults] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
@@ -169,9 +171,15 @@ function FAQPage() {
                   <path d="M18 6 6 18M6 6l12 12" />
                 </svg>
               </button>
-            )}
+              )}
+            </div>
+            <button className="faq-ask-btn" onClick={() => navigate('/community')}>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" width="16" height="16">
+                <line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" />
+              </svg>
+              New question
+            </button>
           </div>
-        </div>
 
         {displayedData.length === 0 ? (
           <div className="faq-empty">
