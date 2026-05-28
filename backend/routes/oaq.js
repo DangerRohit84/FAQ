@@ -90,7 +90,7 @@ router.post('/', auth, async (req, res) => {
         .map(o => ({ text: o.question, source: 'OAQ', id: o._id, score: score(o.question) })),
     ].sort((a, b) => b.score - a.score);
 
-    if (allDupes.length > 0 && !req.body.force) {
+    if (allDupes.length > 0) {
       return res.status(409).json({ duplicates: allDupes });
     }
 

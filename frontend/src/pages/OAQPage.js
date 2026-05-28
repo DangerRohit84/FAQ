@@ -55,7 +55,7 @@ function OAQPage() {
       const res = await authFetch('/api/oaq', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ question: newQuestion, description: newDescription, category: newCategory, force: duplicates.length > 0 }),
+        body: JSON.stringify({ question: newQuestion, description: newDescription, category: newCategory }),
       });
       const data = await res.json();
       if (res.status === 409) {
@@ -246,7 +246,7 @@ function OAQPage() {
                 </div>
               )}
               <button className="oaq-btn oaq-btn--primary" type="submit" disabled={submitting || !newQuestion.trim()}>
-                {submitting ? 'Submitting…' : duplicates.length > 0 ? 'Submit anyway' : 'Submit question'}
+                {submitting ? 'Submitting…' : 'Submit question'}
               </button>
             </form>
           )}
