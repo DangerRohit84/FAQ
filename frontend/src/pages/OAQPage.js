@@ -214,7 +214,7 @@ function OAQPage() {
               />
               <textarea
                 className="oaq-textarea oaq-textarea--sm"
-                placeholder="Add more details (optional)"
+                placeholder="Add more details"
                 value={newDescription}
                 onChange={e => setNewDescription(e.target.value)}
                 rows={2}
@@ -226,8 +226,9 @@ function OAQPage() {
                   value={newCategory}
                   onChange={e => setNewCategory(e.target.value)}
                 >
-                  <option value="">Select category (optional)</option>
+                  <option value="">Select a category</option>
                   {faqCategories.map(c => <option key={c} value={c}>{c}</option>)}
+                  <option value="Other">Other</option>
                 </select>
               </div>
               {error && <div className="oaq-error">{error}</div>}
