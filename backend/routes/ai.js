@@ -66,4 +66,54 @@ Respond in JSON format like this:
   }
 });
 
+/* ── AI check if question is relevant to FAQ topics ── */
+router.post('/check-question/:oaqId', auth, admin, async (req, res) => {
+  try {
+    if (!groqApiKey) {
+      return res.status(400).json({ error: 'GROQ_API_KEY not configured. Add it to .env' });
+    }
+
+    const oaq = await OAQ.findById(req.params.oaqId)
+      .populate('submittedBy', 'name');
+    if (!oaq) return res.status(404).json({ error: 'OAQ not found' });
+
+    const groq = new Groq({ apiKey: groqApiKey });
+
+    const prompt = `You are an AI assistant helping moderate a community Q&A forum for the Vicharanashala Internship at IIT Ropar.
+
+The forum covers these topics: About the internship, Timing & Dates, NOC (No Objection Certificate), Selection & Offer Letter, Work & Mentorship, Code of Conduct, Interviews, Certificate, Rosetta (Internship Journal), Coursework & ViBe LMS, Yaksha Chat, ViBe Platform, Team Formation.
+
+A user submitted this question:
+"${oaq.question}"
+
+Description (if any): "${oaq.description || 'none'}"
+
+Determine if this question is related to the Vicharanashala Internship (on-topic) or if it is spam / unrelated.
+
+Respond in JSON format:
+{
+  "relevant": true/false,
+  "reason": "brief explanation why",
+  "confidence": "high/medium/low"
+}`;
+
+    const completion = await groq.chat.completions.create({
+      messages: [{ role: 'user', content: prompt }],
+      model: 'llama-3.3-70b-versatile',
+      temperature: 0.2,
+      response_format: { type: 'json_object' },
+    });
+
+    const result = JSON.parse(completion.choices[0]?.message?.content || '{}');
+
+    res.json({
+      relevant: result.relevant !== false,
+      reason: result.reason || '',
+      confidence: result.confidence || 'low',
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 module.exports = router;

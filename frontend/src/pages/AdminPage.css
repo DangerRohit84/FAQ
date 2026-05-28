@@ -277,6 +277,52 @@
   cursor: not-allowed;
 }
 
+.admin-btn--ai-check {
+  background: #1e293b;
+  color: #34d399;
+  border: 1.5px solid #10b981;
+  font-size: 0.78rem;
+}
+
+.admin-btn--ai-check:hover:not(:disabled) {
+  background: #374151;
+  color: #6ee7b7;
+}
+
+.admin-btn--ai-check:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.admin-ai-result--spam {
+  background: #450a0a;
+  border-color: #dc2626;
+}
+
+[data-theme="light"] .admin-btn--ai-check {
+  background: #f0fdf4;
+  color: #059669;
+  border-color: #86efac;
+}
+
+[data-theme="light"] .admin-btn--ai-check:hover:not(:disabled) {
+  background: #dcfce7;
+  color: #047857;
+}
+
+[data-theme="light"] .admin-ai-result--spam {
+  background: #fef2f2;
+  border-color: #fca5a5;
+}
+
+.admin-ai-result--spam .admin-ai-header {
+  color: #fca5a5;
+}
+
+[data-theme="light"] .admin-ai-result--spam .admin-ai-header {
+  color: #dc2626;
+}
+
 .admin-ai-result {
   margin-top: 12px;
   padding: 12px 14px;
