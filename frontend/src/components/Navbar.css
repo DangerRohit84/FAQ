@@ -86,6 +86,7 @@
 }
 
 .navbar-btn--primary:hover {
+  background: var(--accent-gradient);
   color: white;
 }
 
