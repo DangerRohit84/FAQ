@@ -355,7 +355,7 @@ function OAQPage() {
                       {/* Related questions */}
                       {related && (
                         <div className="oaq-related">
-                          <strong>Related questions:</strong>
+
                           {related.faq?.length > 0 && related.faq.map(cat => cat.questions.map((item, i) => (
                             <div key={i} className="oaq-related-item" onClick={() => navigate('/faq')}>
                               📖 {item.q}
