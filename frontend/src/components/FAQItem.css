@@ -1,3 +1,21 @@
+/*
+ * FAQItem.css — Styles for a single FAQ accordion item.
+ *
+ * Accordion expand/collapse is achieved via max-height + opacity
+ * transitions on .faq-item__content. When the parent .faq-item gains
+ * the .faq-item--open modifier the content area expands and becomes
+ * opaque.
+ *
+ * Chevron rotation: .faq-item__icon rotates 90° when open, giving a
+ * visual indicator of the expanded state.
+ *
+ * Dark mode overrides use [data-theme="dark"] selectors to recolor the
+ * open-state accents.
+ *
+ * Responsive: at ≤640px the trigger and answer text/padding shrink.
+ */
+
+/* ── Base item card ── */
 .faq-item {
   background: var(--bg-card);
   border: 1px solid var(--border);
@@ -11,13 +29,13 @@
   box-shadow: var(--shadow-sm);
 }
 
+/* Open state: stronger border and a subtle shadow */
 .faq-item--open {
   border-color: var(--border-hover);
   box-shadow: 0 4px 20px rgba(30, 64, 175, 0.08);
 }
 
-/* ---- Trigger ---- */
-
+/* ── Trigger button ── */
 .faq-item__trigger {
   width: 100%;
   display: flex;
@@ -41,10 +59,12 @@
   background: var(--bg-card-hover);
 }
 
+/* Open trigger text colour (blue accent) */
 .faq-item--open .faq-item__trigger {
   color: #1e40af;
 }
 
+/* ── Question number badge ── */
 .faq-item__number {
   flex-shrink: 0;
   width: 26px;
@@ -60,16 +80,19 @@
   transition: background 0.25s, color 0.25s, transform 0.25s;
 }
 
+/* Open badge: blue gradient background, slightly scaled */
 .faq-item--open .faq-item__number {
   background: linear-gradient(135deg, #dbeafe, #bfdbfe);
   color: #1e40af;
   transform: scale(1.05);
 }
 
+/* ── Question text ── */
 .faq-item__question {
   flex: 1;
 }
 
+/* ── View count ── */
 .faq-item__views {
   flex-shrink: 0;
   font-size: 0.75rem;
@@ -78,6 +101,7 @@
   white-space: nowrap;
 }
 
+/* ── Chevron icon container ── */
 .faq-item__icon {
   flex-shrink: 0;
   width: 26px;
@@ -90,11 +114,14 @@
   transition: background 0.25s, transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
+/* Open state: blue background, chevron rotated 90° (the SVG path draws a
+   right-pointing chevron; rotating 90° makes it point down) */
 .faq-item--open .faq-item__icon {
   background: #dbeafe;
   transform: rotate(90deg) scale(1.05);
 }
 
+/* ── Chevron SVG ── */
 .faq-item__chevron {
   width: 14px;
   height: 14px;
@@ -106,8 +133,7 @@
   color: #1e40af;
 }
 
-/* ---- Answer area ---- */
-
+/* ── Collapsible answer area ── */
 .faq-item__content {
   max-height: 0;
   overflow: hidden;
@@ -115,11 +141,13 @@
   opacity: 0;
 }
 
+/* Open: set a large enough max-height so the answer text fits; opacity 1 */
 .faq-item--open .faq-item__content {
   max-height: 600px;
   opacity: 1;
 }
 
+/* ── Answer list ── */
 .faq-item__answer {
   list-style: none;
   margin: 0;
@@ -135,6 +163,7 @@
   margin-bottom: 6px;
 }
 
+/* Bullet dot before each sentence */
 .faq-item__answer li::before {
   content: '';
   position: absolute;
@@ -151,6 +180,7 @@
   margin-bottom: 0;
 }
 
+/* ── Responsive (≤640px) ── */
 @media (max-width: 640px) {
   .faq-item__trigger {
     padding: 12px 14px;
@@ -165,27 +195,35 @@
   }
 }
 
+/* ── Dark mode overrides ── */
+
+/* Open card shadow colour */
 [data-theme="dark"] .faq-item--open {
   box-shadow: 0 4px 20px rgba(99, 102, 241, 0.15);
 }
 
+/* Open trigger text */
 [data-theme="dark"] .faq-item--open .faq-item__trigger {
   color: #818cf8;
 }
 
+/* Open number badge — darker indigo gradient */
 [data-theme="dark"] .faq-item--open .faq-item__number {
   background: linear-gradient(135deg, #312e81, #3730a3);
   color: #c7d2fe;
 }
 
+/* Open chevron icon container */
 [data-theme="dark"] .faq-item--open .faq-item__icon {
   background: #312e81;
 }
 
+/* Open chevron colour */
 [data-theme="dark"] .faq-item--open .faq-item__chevron {
   color: #818cf8;
 }
 
+/* Bullet colour */
 [data-theme="dark"] .faq-item__answer li::before {
   background: #6366f1;
 }

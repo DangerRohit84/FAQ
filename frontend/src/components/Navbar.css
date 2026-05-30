@@ -19,7 +19,7 @@
   justify-content: space-between;
   padding: 0 20px;
   height: 56px;
-  position: relative; /* Necessary constraint for absolute dropdown positioning */
+  position: relative;
 }
 
 .navbar-brand {
@@ -38,7 +38,6 @@
   color: var(--accent);
 }
 
-/* Inline Desktop Links Links Setup */
 .navbar-links {
   display: flex;
   align-items: center;
@@ -131,7 +130,6 @@
   border-color: rgba(34, 197, 94, 0.3);
 }
 
-/* Absolute lamp component positioning wrapper */
 .navbar-lamp {
   position: absolute;
   right: 8px;
@@ -182,7 +180,7 @@
   transform: translateY(-7.5px) rotate(-45deg);
 }
 
-/* ── Mobile ── */
+/* ── Mobile (≤768px) ── */
 @media (max-width: 768px) {
   .hamburger {
     display: flex;
@@ -220,3 +218,9 @@
   }
 }
 
+/* Extra-small screens — hide brand text, keep only icon */
+@media (max-width: 480px) {
+  .navbar-brand span {
+    display: none;
+  }
+}

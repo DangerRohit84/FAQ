@@ -1,14 +1,33 @@
+/*
+ * App.css — Global styles for the application.
+ *
+ * Contents:
+ *   - .app base layout for the root component
+ *   - Autocomplete/autocorrect dropdown styles used by AutocorrectInput
+ *     (positioned absolutely below the search input, with item hover/
+ *     active states and a type indicator icon)
+ *   - Dark mode is handled via [data-theme="dark"] on <html>, using CSS
+ *     custom properties defined elsewhere (--bg-card, --border, etc.)
+ *
+ * Note: The autocomplete styles live here because they are applied
+ * outside of FAQPage's component tree (portal-like positioning) and
+ * need to be globally available.
+ */
+
 .app {
   min-height: 100vh;
 }
 
-/* ── Autocorrect dropdown ── */
+/* ── Autocomplete dropdown ── */
+
+/* Wrapper — establishes the positioning context for the dropdown */
 .autocorrect-wrapper {
   position: relative;
   width: 100%;
   display: block;
 }
 
+/* Dropdown list — positioned directly below the input, full width */
 .autocorrect-dropdown {
   position: absolute;
   top: 100%;
@@ -27,6 +46,7 @@
   text-align: left;
 }
 
+/* Each suggestion row */
 .autocorrect-item {
   display: flex;
   align-items: center;
@@ -39,11 +59,13 @@
   text-align: left;
 }
 
+/* Hover and keyboard-active highlight */
 .autocorrect-item:hover,
 .autocorrect-item--active {
   background: var(--bg-muted);
 }
 
+/* Type indicator icon column (📖 for FAQ, 💬 for community) */
 .autocorrect-type {
   flex-shrink: 0;
   font-size: 1rem;

@@ -1,3 +1,39 @@
+/*
+ * OAQPage.css — Community Q&A Page Styles
+ *
+ * OVERALL PURPOSE:
+ *   Styles the Community Q&A page including the question submission card,
+ *   the question list (OAQ cards with voting columns), expandable answer
+ *   sections, answer forms, a report modal overlay, a toast notification,
+ *   and dark-mode overrides.
+ *
+ * LAYOUT APPROACH:
+ *   - Uses a max-width container (800px) centered on the page.
+ *   - Each OAQ question is displayed as a horizontal card with a narrow
+ *     voting column on the left and the body content on the right.
+ *   - Answers inside an expanded card use a similar vote-column layout
+ *     but with smaller controls.
+ *   - The report modal is a fixed overlay centered on the viewport.
+ *   - The toast notification is fixed at the bottom-center.
+ *
+ * RESPONSIVE BEHAVIOR:
+ *   - The page uses CSS custom properties (var(--...)) for theming.
+ *   - No explicit @media breakpoints are defined in this file; layout
+ *     responsiveness is handled by flexbox wrapping and percentage widths.
+ *   - On narrow viewports the container's padding shrinks, and long text
+ *     wraps naturally inside flex children (min-width: 0 on .oaq-card__body).
+ *
+ * DARK MODE:
+ *   - Overrides are scoped to [data-theme="dark"] and adjust specific
+ *     elements (promoted cards, related items, answer backgrounds, etc.)
+ *     to darker color values.
+ */
+
+/* ============================================================
+   PAGE & CONTAINER
+   ============================================================ */
+
+/* Full-page wrapper: fills viewport minus header height, adds scroll padding */
 .oaq-page {
   min-height: calc(100vh - 56px);
   padding: 40px 20px 60px;
@@ -5,10 +41,15 @@
   z-index: 1;
 }
 
+/* Centered content column — max 800px wide */
 .oaq-container {
   max-width: 800px;
   margin: 0 auto;
 }
+
+/* ============================================================
+   HEADER (title + subtitle)
+   ============================================================ */
 
 .oaq-header {
   text-align: center;
@@ -27,7 +68,9 @@
   color: var(--text-muted);
 }
 
-/* ---- Submit ---- */
+/* ============================================================
+   SUBMIT QUESTION CARD
+   ============================================================ */
 
 .oaq-submit-card {
   background: var(--bg-card);
@@ -45,6 +88,7 @@
   margin: 0;
 }
 
+/* Header row: "Ask a question" label + action button */
 .oaq-submit-header {
   display: flex;
   justify-content: space-between;
@@ -52,6 +96,9 @@
   margin-bottom: 12px;
 }
 
+/* ----- Textareas & inputs ----- */
+
+/* Shared style for all textareas in the OAQ page */
 .oaq-textarea {
   width: 100%;
   padding: 12px 14px;
@@ -70,10 +117,12 @@
   box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
 }
 
+/* Smaller textarea variant (description, answer input) */
 .oaq-textarea--sm {
   min-height: 60px;
 }
 
+/* Error/duplicate warning box */
 .oaq-error {
   background: var(--danger-bg);
   color: var(--danger);
@@ -82,6 +131,8 @@
   font-size: 0.85rem;
   margin-top: 10px;
 }
+
+/* ----- Buttons ----- */
 
 .oaq-btn {
   padding: 10px 22px;
@@ -104,12 +155,14 @@
   cursor: not-allowed;
 }
 
+/* Primary accent button (submit, submit report) */
 .oaq-btn--primary {
   background: var(--accent-gradient);
   color: white;
   box-shadow: 0 4px 14px rgba(99, 102, 241, 0.25);
 }
 
+/* Secondary button (post answer) */
 .oaq-btn--secondary {
   background: var(--accent-light);
   color: var(--accent);
@@ -119,7 +172,45 @@
   background: var(--accent-light);
 }
 
-/* ---- Toolbar ---- */
+/* Ghost button (cancel actions) */
+.oaq-btn--ghost {
+  background: none;
+  color: var(--text-muted);
+  margin-top: 0;
+}
+
+.oaq-btn--ghost:hover {
+  color: var(--text-secondary);
+}
+
+/* ----- Category <select> ----- */
+
+.oaq-select {
+  width: 100%;
+  padding: 10px 14px;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 10px;
+  font-size: 0.9rem;
+  font-family: inherit;
+  outline: none;
+  color: var(--text-secondary);
+  background: var(--bg-card);
+  cursor: pointer;
+  transition: border-color 0.2s;
+}
+
+.oaq-select:focus {
+  border-color: #818cf8;
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+}
+
+.oaq-category-row {
+  margin-top: 8px;
+}
+
+/* ============================================================
+   SORT TOOLBAR
+   ============================================================ */
 
 .oaq-toolbar {
   display: flex;
@@ -128,12 +219,14 @@
   margin-bottom: 16px;
 }
 
+/* Question count label */
 .oaq-count {
   font-size: 0.9rem;
   color: var(--text-muted);
   font-weight: 500;
 }
 
+/* Segmented button group for sort */
 .oaq-sort {
   display: flex;
   gap: 4px;
@@ -155,13 +248,16 @@
   transition: all 0.2s;
 }
 
+/* Active sort button gets a card-like elevation */
 .oaq-sort-btn.active {
   background: var(--bg-card);
   color: var(--text-primary);
   box-shadow: var(--shadow-sm);
 }
 
-/* ---- Loading & Empty ---- */
+/* ============================================================
+   LOADING & EMPTY STATES
+   ============================================================ */
 
 .oaq-loader {
   text-align: center;
@@ -177,7 +273,9 @@
   font-size: 0.95rem;
 }
 
-/* ---- OAQ list ---- */
+/* ============================================================
+   OAQ LIST
+   ============================================================ */
 
 .oaq-list {
   display: flex;
@@ -185,8 +283,10 @@
   gap: 12px;
 }
 
+/* ----- Individual question card ----- */
+
 .oaq-card {
-  display: flex;
+  display: flex;                   /* Vote column left, body right */
   background: var(--bg-card);
   border: 1px solid var(--border);
   border-radius: 14px;
@@ -198,25 +298,27 @@
   box-shadow: var(--shadow-md);
 }
 
+/* Approved status: green left border */
 .oaq-card--approved {
   border-left: 3px solid var(--success);
 }
 
+/* Promoted status: accent left border + light background */
 .oaq-card--promoted {
   border-left: 3px solid var(--accent);
   background: #f8faff;
 }
 
-/* ---- Vote column ---- */
+/* ----- Vote column (question level) ----- */
 
 .oaq-card__vote {
   display: flex;
-  flex-direction: column;
+  flex-direction: column;          /* Upvote arrow → counts → downvote arrow */
   align-items: center;
   gap: 4px;
   padding: 14px 10px;
   background: var(--bg-card-hover);
-  min-width: 56px;
+  min-width: 56px;                 /* Ensures consistent column width */
 }
 
 .oaq-vote-btn {
@@ -238,16 +340,19 @@
   height: 16px;
 }
 
+/* Upvote button turns green on hover */
 .oaq-vote-btn--up:hover {
   background: var(--success-bg);
   color: var(--success);
 }
 
+/* Downvote button turns red on hover */
 .oaq-vote-btn--down:hover {
   background: var(--danger-bg);
   color: var(--danger);
 }
 
+/* Smaller vote button variant (for answers) */
 .oaq-vote-btn--sm {
   width: 24px;
   height: 24px;
@@ -258,6 +363,7 @@
   height: 14px;
 }
 
+/* Stacked upvote / downvote counts */
 .oaq-vote-split {
   display: flex;
   flex-direction: column;
@@ -269,7 +375,7 @@
 }
 
 .oaq-vote-split--sm {
-  font-size: 0.68rem;
+  font-size: 0.68rem;             /* Smaller text for answer votes */
 }
 
 .oaq-vote-up {
@@ -280,12 +386,12 @@
   color: var(--danger);
 }
 
-/* ---- Card body ---- */
+/* ----- Card body ----- */
 
 .oaq-card__body {
-  flex: 1;
+  flex: 1;                         /* Fills remaining space after vote column */
   padding: 14px 16px;
-  min-width: 0;
+  min-width: 0;                    /* Allows text truncation / wrapping in flex */
 }
 
 .oaq-card__top {
@@ -303,6 +409,7 @@
   line-height: 1.4;
 }
 
+/* Status badge (open / approved / promoted / rejected) */
 .oaq-status {
   flex-shrink: 0;
   font-size: 0.7rem;
@@ -319,6 +426,7 @@
 .oaq-status--promoted { background: var(--accent-light); color: var(--accent); }
 .oaq-status--rejected { background: var(--danger-bg); color: var(--danger); }
 
+/* Meta row: author, date, views, answers, report */
 .oaq-card__meta {
   display: flex;
   gap: 14px;
@@ -327,6 +435,7 @@
   margin-bottom: 10px;
 }
 
+/* Expand / collapse toggle button */
 .oaq-card__expand {
   display: inline-flex;
   align-items: center;
@@ -341,6 +450,7 @@
   cursor: pointer;
 }
 
+/* Chevron icon: rotates 90° when answers are visible */
 .oaq-chevron {
   width: 14px;
   height: 14px;
@@ -351,7 +461,34 @@
   transform: rotate(90deg);
 }
 
-/* ---- Answers ---- */
+/* Description text on cards */
+.oaq-card__desc {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  line-height: 1.5;
+  margin: 4px 0 6px;
+}
+
+/* Category tag on cards */
+.oaq-card__cat {
+  display: inline-block;
+  font-size: 0.72rem;
+  font-weight: 500;
+  color: var(--accent);
+  background: var(--accent-light);
+  padding: 2px 8px;
+  border-radius: 6px;
+  margin-bottom: 6px;
+}
+
+.oaq-card__score {
+  color: #2563eb;
+  font-weight: 600;
+}
+
+/* ============================================================
+   ANSWERS SECTION (inside expanded card)
+   ============================================================ */
 
 .oaq-answers {
   margin-top: 12px;
@@ -365,6 +502,7 @@
   margin-bottom: 10px;
 }
 
+/* Individual answer row */
 .oaq-answer {
   display: flex;
   gap: 10px;
@@ -374,11 +512,13 @@
   margin-bottom: 8px;
 }
 
+/* Accepted answer: green background and border */
 .oaq-answer--accepted {
   background: #f0fdf4;
   border: 1px solid #bbf7d0;
 }
 
+/* Answer vote column (smaller) */
 .oaq-answer__vote {
   display: flex;
   flex-direction: column;
@@ -410,6 +550,7 @@
   font-weight: 600;
 }
 
+/* Answer submission form */
 .oaq-answer-form {
   display: flex;
   flex-direction: column;
@@ -422,66 +563,18 @@
   margin-top: 0;
 }
 
-/* ---- Ghost button ---- */
-.oaq-btn--ghost {
-  background: none;
-  color: var(--text-muted);
-  margin-top: 0;
-}
+/* ============================================================
+   RELATED QUESTIONS SECTION (REMOVED)
+   ============================================================ */
 
-.oaq-btn--ghost:hover {
-  color: var(--text-secondary);
-}
+/*
+ * The .oaq-related block was previously rendered inside the expanded
+ * answers area to show similar FAQ / OAQ entries fetched from the AI
+ * endpoint. It displayed a list of clickable items that linked to
+ * existing questions. The JSX for this section has been removed from
+ * the component, but the CSS classes below are kept for reference.
+ */
 
-/* ---- Select / Category ---- */
-.oaq-select {
-  width: 100%;
-  padding: 10px 14px;
-  border: 1.5px solid #e2e8f0;
-  border-radius: 10px;
-  font-size: 0.9rem;
-  font-family: inherit;
-  outline: none;
-  color: var(--text-secondary);
-  background: var(--bg-card);
-  cursor: pointer;
-  transition: border-color 0.2s;
-}
-
-.oaq-select:focus {
-  border-color: #818cf8;
-  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
-}
-
-.oaq-category-row {
-  margin-top: 8px;
-}
-
-/* ---- Description & Category on cards ---- */
-.oaq-card__desc {
-  font-size: 0.85rem;
-  color: var(--text-muted);
-  line-height: 1.5;
-  margin: 4px 0 6px;
-}
-
-.oaq-card__cat {
-  display: inline-block;
-  font-size: 0.72rem;
-  font-weight: 500;
-  color: var(--accent);
-  background: var(--accent-light);
-  padding: 2px 8px;
-  border-radius: 6px;
-  margin-bottom: 6px;
-}
-
-.oaq-card__score {
-  color: #2563eb;
-  font-weight: 600;
-}
-
-/* ---- Related questions ---- */
 .oaq-related {
   margin-top: 12px;
   padding: 10px 14px;
@@ -512,7 +605,11 @@
   border-bottom: 1px solid var(--border);
 }
 
-/* ── Report ── */
+/* ============================================================
+   REPORT SYSTEM
+   ============================================================ */
+
+/* Small inline report button (in meta rows) */
 .oaq-report-btn {
   background: none;
   border: none;
@@ -538,6 +635,7 @@
   padding: 1px 4px;
 }
 
+/* Full-screen dark overlay behind the report modal */
 .oaq-report-overlay {
   position: fixed;
   inset: 0;
@@ -549,13 +647,14 @@
   padding: 20px;
 }
 
+/* Modal card: white card on dark overlay */
 .oaq-report-modal {
   background: var(--bg-card);
   border: 1px solid var(--border);
   border-radius: 12px;
   padding: 24px;
   width: 100%;
-  max-width: 420px;
+  max-width: 420px;                /* Limits modal width on large screens */
   box-shadow: var(--shadow-lg);
 }
 
@@ -573,10 +672,11 @@
   margin-top: 12px;
 }
 
-[data-theme="dark"] .oaq-report-modal {
-  border-color: #374151;
-}
+/* ============================================================
+   TOAST NOTIFICATION
+   ============================================================ */
 
+/* Fixed bottom-center toast; auto-dismisses on click */
 .oaq-toast {
   position: fixed;
   bottom: 24px;
@@ -600,15 +700,30 @@
   to { opacity: 1; transform: translateX(-50%) translateY(0); }
 }
 
-/* ── Dark mode overrides ── */
+/* ============================================================
+   DARK MODE OVERRIDES
+   ============================================================ */
+
+/*
+ * When the document has data-theme="dark" (set by a theme toggle),
+ * these overrides adjust specific elements that can't be handled by
+ * CSS custom properties alone (e.g., hardcoded background colors).
+ *
+ * The page uses `var(--...)` for most colors, so many elements are
+ * already themed. Only elements with literal color values need overrides.
+ */
+
+/* Promoted card background in dark mode */
 [data-theme="dark"] .oaq-card--promoted {
   background: #1e1b4b;
 }
 
+/* Score text color in dark mode uses the accent variable instead of hardcoded blue */
 [data-theme="dark"] .oaq-card__score {
   color: var(--accent);
 }
 
+/* Related questions section (kept for reference) dark background */
 [data-theme="dark"] .oaq-related {
   background: #1e1b4b;
   border-color: #312e81;
@@ -618,15 +733,23 @@
   color: var(--accent);
 }
 
+/* Secondary button hover in dark mode */
 [data-theme="dark"] .oaq-btn--secondary:hover:not(:disabled) {
   background: #312e81;
 }
 
+/* Accepted answer card in dark mode: dark green instead of light green */
 [data-theme="dark"] .oaq-answer--accepted {
   background: #052e16;
   border-color: #166534;
 }
 
+/* Answer card background in dark mode */
 [data-theme="dark"] .oaq-answer {
   background: #1e293b;
+}
+
+/* Report modal border in dark mode */
+[data-theme="dark"] .oaq-report-modal {
+  border-color: #374151;
 }

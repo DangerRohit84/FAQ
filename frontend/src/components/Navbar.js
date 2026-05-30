@@ -1,3 +1,24 @@
+/**
+ * Navbar.js — Top navigation bar component
+ *
+ * Purpose:
+ *   Renders a responsive navigation bar with links, auth-aware controls
+ *   (Sign in / Sign up vs. Dashboard / Sign out), a hamburger menu for
+ *   mobile viewports, a notification bell, and a dark-mode theme toggle.
+ *
+ * Key behaviour:
+ *   - Uses React state (`menuOpen`) to show/hide the mobile nav links.
+ *   - `toggleMenu` flips the state; `closeMenu` sets it to false.
+ *   - `closeMenu` is attached to every link so navigating auto-closes the
+ *     mobile menu.
+ *   - The `.active` CSS class (applied conditionally on `menuOpen`)
+ *     controls visibility of the link list on small screens.
+ *   - On the landing page (pathname === '/') when no user is logged in,
+ *     renders a minimal bar with only the brand (no links or utilities).
+ *   - Role-based link visibility: admin users see Admin link and do not
+ *     see Community / Leaderboard; non-admin users see Dashboard but not Admin.
+ */
+
 import React, { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';

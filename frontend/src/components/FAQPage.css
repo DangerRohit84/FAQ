@@ -1,9 +1,35 @@
+/*
+ * FAQPage.css — Styles for the main FAQ page layout.
+ *
+ * Sections:
+ *   - Page wrapper & gradient background layer
+ *   - Header (badge, title, subtitle)
+ *   - Search bar wrapper, input, voice button, clear button
+ *   - Loading skeleton
+ *   - Empty state (no results)
+ *   - Results count indicator
+ *   - Category cards grid and flat list
+ *   - Card header (icon, title, question count badge)
+ *   - Card body (scrollable questions area)
+ *   - Footer
+ *   - Shared animations (fadeSlideIn, cardIn, shimmer)
+ *
+ * Responsive breakpoints:
+ *   - 768px  – reduced header margin
+ *   - 640px  – smaller title/subtitle, single-column grid, smaller input
+ *   - 480px  – even smaller title, tighter padding/icon positions
+ *
+ * Dark mode overrides use [data-theme="dark"] selectors.
+ */
+
+/* ── Page wrapper ── */
 .faq-page {
   position: relative;
   min-height: 100vh;
   padding: 48px 20px 60px;
 }
 
+/* ── Decorative gradient background (fixed, no interaction) ── */
 .faq-gradient {
   position: fixed;
   inset: 0;
@@ -40,13 +66,13 @@
   pointer-events: none;
 }
 
+/* ── Content container ── */
 .faq-container {
   max-width: 1200px;
   margin: 0 auto;
 }
 
-/* ---- Header ---- */
-
+/* ── Header (badge, title, subtitle) ── */
 .faq-header {
   text-align: center;
   margin-bottom: 44px;
@@ -65,6 +91,7 @@
   animation: fadeSlideIn 0.5s ease both;
 }
 
+/* Dark mode overrides: badge background */
 [data-theme="dark"] .faq-badge {
   background: linear-gradient(135deg, rgba(99, 102, 241, 0.2), rgba(99, 102, 241, 0.1));
 }
@@ -79,6 +106,7 @@
   animation: fadeSlideIn 0.5s 0.1s ease both;
 }
 
+/* Gradient text for the title */
 .faq-title__text {
   background: linear-gradient(135deg, #1e3a5f 0%, #4f46e5 50%, #0891b2 100%);
   -webkit-background-clip: text;
@@ -107,8 +135,7 @@
   border-color: var(--accent);
 }
 
-/* ---- Search bar ---- */
-
+/* ── Search bar wrapper ── */
 .faq-search-wrapper {
   margin-bottom: 40px;
   animation: fadeSlideIn 0.5s 0.3s ease both;
@@ -128,6 +155,7 @@
   flex: 1;
 }
 
+/* Search icon positioned inside the input */
 .faq-search-icon {
   position: absolute;
   left: 22px;
@@ -139,6 +167,7 @@
   pointer-events: none;
 }
 
+/* "New question" button */
 .faq-ask-btn {
   display: flex;
   align-items: center;
@@ -167,6 +196,7 @@
   transform: translateY(0);
 }
 
+/* Search input field */
 .faq-search-input {
   width: 100%;
   padding: 18px 54px 18px 58px;
@@ -194,6 +224,7 @@
   box-shadow: 0 4px 24px rgba(99, 102, 241, 0.12);
 }
 
+/* Dark mode overrides for the search input */
 [data-theme="dark"] .faq-search-input {
   background: var(--bg-card);
   color: var(--text-primary);
@@ -210,6 +241,7 @@
   box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
 }
 
+/* Clear (×) button — right inside the input */
 .faq-search-clear {
   position: absolute;
   right: 14px;
@@ -238,6 +270,7 @@
   height: 18px;
 }
 
+/* Voice (mic) button */
 .faq-search-mic {
   position: absolute;
   right: 54px;
@@ -266,6 +299,7 @@
   height: 18px;
 }
 
+/* Active listening state: red accent with pulsing shadow */
 .faq-search-mic--active {
   color: #ef4444;
   background: rgba(239, 68, 68, 0.1);
@@ -277,8 +311,7 @@
   50% { box-shadow: 0 0 0 8px rgba(239, 68, 68, 0); }
 }
 
-/* ---- Loading skeleton ---- */
-
+/* ── Loading skeleton ── */
 .faq-loader {
   padding-top: 60px;
 }
@@ -324,6 +357,7 @@
   animation: shimmer 1.5s 0.2s infinite;
 }
 
+/* Dark mode skeleton colours */
 [data-theme="dark"] .faq-loader__bar,
 [data-theme="dark"] .faq-loader__header,
 [data-theme="dark"] .faq-loader__item {
@@ -331,8 +365,7 @@
   background-size: 200% 100%;
 }
 
-/* ---- Empty state ---- */
-
+/* ── Empty state (no search results) ── */
 .faq-empty {
   text-align: center;
   padding: 60px 20px;
@@ -380,6 +413,7 @@
   transform: translateY(-1px);
 }
 
+/* ── Results count indicator (shown during search) ── */
 .faq-results-count {
   font-size: 0.9rem;
   color: var(--text-muted);
@@ -399,14 +433,14 @@
   flex-shrink: 0;
 }
 
-/* ---- Category cards grid ---- */
-
+/* ── Category cards grid (default, non-searching view) ── */
 .faq-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
   gap: 24px;
 }
 
+/* Card container */
 .faq-category-card {
   background: var(--bg-card);
   border: 1px solid var(--border);
@@ -424,12 +458,12 @@
   transform: translateY(-2px);
 }
 
+/* Dark mode card hover border */
 [data-theme="dark"] .faq-category-card:hover {
   border-color: var(--border-hover);
 }
 
-/* ---- Card header ---- */
-
+/* ── Card header (icon, category name, question count) ── */
 .faq-category-card__header {
   display: flex;
   align-items: center;
@@ -442,6 +476,7 @@
   overflow: hidden;
 }
 
+/* Subtle highlight overlay on the header gradient */
 .faq-category-card__header::after {
   content: '';
   position: absolute;
@@ -478,14 +513,15 @@
   z-index: 1;
 }
 
+/* ── Card body (scrollable questions area) ── */
 .faq-category-card__body {
   min-height: 0;
   overflow-y: auto;
   overflow-x: hidden;
   max-height: 480px;
   padding: 10px;
-  scrollbar-width: none;
-  -ms-overflow-style: none;
+  scrollbar-width: none;        /* Firefox: hide scrollbar */
+  -ms-overflow-style: none;     /* IE/Edge: hide scrollbar */
 }
 
 .faq-category-card__body > * + * {
@@ -493,11 +529,10 @@
 }
 
 .faq-category-card__body::-webkit-scrollbar {
-  display: none;
+  display: none;               /* Chrome/Safari: hide scrollbar */
 }
 
-/* ---- Search results list (flat) ---- */
-
+/* ── Search results list (flat view, no grid) ── */
 .faq-list {
   display: flex;
   flex-direction: column;
@@ -505,8 +540,7 @@
   animation: fadeSlideIn 0.3s ease both;
 }
 
-/* ---- Footer ---- */
-
+/* ── Footer ── */
 .faq-footer {
   text-align: center;
   margin-top: 56px;
@@ -527,8 +561,7 @@
   color: #4338ca;
 }
 
-/* ---- Animations ---- */
-
+/* ── Shared animations ── */
 @keyframes fadeSlideIn {
   from {
     opacity: 0;
@@ -556,14 +589,16 @@
   100% { background-position: -200% 0; }
 }
 
-/* ---- Responsive ---- */
+/* ── Responsive breakpoints ── */
 
+/* Tablet: reduce header bottom margin */
 @media (max-width: 768px) {
   .faq-header {
     margin-bottom: 28px;
   }
 }
 
+/* Mobile (small): shrink typography, single-column grid, smaller input */
 @media (max-width: 640px) {
   .faq-title {
     font-size: 2rem;
@@ -587,6 +622,7 @@
   }
 }
 
+/* Mobile (tiny): even smaller title, tighter padding and icon positions */
 @media (max-width: 480px) {
   .faq-title {
     font-size: 1.6rem;
