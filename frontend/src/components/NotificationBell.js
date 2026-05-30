@@ -12,7 +12,7 @@ function NotificationBell() {
 
   useEffect(() => {
     if (!user) return;
-    fetch('/api/notifications', { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } })
+    fetch('/api/notifications', { credentials: 'include' })
       .then(r => r.json())
       .then(data => {
         setNotifications(data.notifications || []);
@@ -35,7 +35,7 @@ function NotificationBell() {
   const markAllRead = async () => {
     await fetch('/api/notifications/read-all', {
       method: 'PUT',
-      headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
+      credentials: 'include',
     });
     setNotifications(n => n.map(n => ({ ...n, read: true })));
     setUnread(0);
@@ -44,7 +44,7 @@ function NotificationBell() {
   const markRead = async (id) => {
     await fetch(`/api/notifications/${id}/read`, {
       method: 'PUT',
-      headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
+      credentials: 'include',
     });
     setNotifications(n => n.map(not => not._id === id ? { ...not, read: true } : not));
     setUnread(u => Math.max(0, u - 1));

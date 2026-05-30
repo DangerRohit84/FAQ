@@ -1,6 +1,7 @@
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
+const cookieParser = require('cookie-parser');
 const mongoose = require('mongoose');
 const Groq = require('groq-sdk');
 const FAQ = require('./models/FAQ');
@@ -22,12 +23,22 @@ let faqCacheTime = 0;
 const FAQ_CACHE_TTL = 5 * 60 * 1000; // 5 minutes
 const MONGO_URI = process.env.MONGO_URI || 'mongodb://localhost:27017/faq-app';
 
-mongoose.connect(MONGO_URI)
-  .then(() => console.log('Connected to MongoDB'))
-  .catch(err => console.error('MongoDB connection error:', err.message));
+function connectDB(retrying) {
+  mongoose.connect(MONGO_URI, { serverSelectionTimeoutMS: 15000 })
+    .then(() => console.log('Connected to MongoDB' + (retrying ? ' (retry)' : '')))
+    .catch(err => {
+      console.error('MongoDB connection error:', err.message);
+      if (!retrying) {
+        console.log('Retrying in 3s...');
+        setTimeout(() => connectDB(true), 3000);
+      }
+    });
+}
+connectDB(false);
 
-app.use(cors());
+app.use(cors({ origin: true, credentials: true }));
 app.use(express.json({ limit: '10mb' }));
+app.use(cookieParser());
 
 app.use('/api/auth', authRoutes);
 app.use('/api/oaq', oaqRoutes);

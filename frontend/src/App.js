@@ -16,8 +16,8 @@ import './App.css';
 function App() {
   return (
     <BrowserRouter>
-      <ThemeProvider>
-        <AuthProvider>
+      <AuthProvider>
+        <ThemeProvider>
           <Navbar />
           <Routes>
             <Route path="/" element={<HomePage />} />
@@ -29,8 +29,8 @@ function App() {
             <Route path="/admin" element={<AdminPage />} />
             <Route path="/leaderboard" element={<LeaderboardPage />} />
           </Routes>
-        </AuthProvider>
-      </ThemeProvider>
+        </ThemeProvider>
+      </AuthProvider>
     </BrowserRouter>
   );
 }

@@ -5,6 +5,17 @@ const { auth, JWT_SECRET } = require('../middleware/auth');
 
 const router = express.Router();
 
+const COOKIE_OPTS = {
+  httpOnly: true,
+  sameSite: 'strict',
+  path: '/',
+  maxAge: 7 * 24 * 60 * 60 * 1000,
+};
+
+function setTokenCookie(res, token) {
+  res.cookie('token', token, COOKIE_OPTS);
+}
+
 router.post('/register', async (req, res) => {
   try {
     const { name, email, password } = req.body;
@@ -20,7 +31,8 @@ router.post('/register', async (req, res) => {
     }
     const user = await User.create({ name, email, password });
     const token = jwt.sign({ id: user._id }, JWT_SECRET, { expiresIn: '7d' });
-    res.status(201).json({ token, user });
+    setTokenCookie(res, token);
+    res.status(201).json({ user });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -37,14 +49,34 @@ router.post('/login', async (req, res) => {
       return res.status(401).json({ error: 'Invalid email or password' });
     }
     const token = jwt.sign({ id: user._id }, JWT_SECRET, { expiresIn: '7d' });
-    res.json({ token, user });
+    setTokenCookie(res, token);
+    res.json({ user });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 });
 
+router.post('/logout', (req, res) => {
+  res.clearCookie('token', { path: '/' });
+  res.json({ message: 'Logged out' });
+});
+
 router.get('/me', auth, async (req, res) => {
   res.json({ user: req.user });
+});
+
+router.put('/theme', auth, async (req, res) => {
+  try {
+    const { theme } = req.body;
+    if (!['light', 'dark'].includes(theme)) {
+      return res.status(400).json({ error: 'Theme must be light or dark' });
+    }
+    req.user.theme = theme;
+    await req.user.save();
+    res.json({ theme });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
 module.exports = router;
