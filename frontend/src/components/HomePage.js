@@ -386,27 +386,6 @@ function HomePage() {
           </div>
         )}
 
-        {/* Stats footer */}
-        {homeData?.stats && (
-          <div className="home-stats-bar">
-            <div className="home-stat">
-              <span className="home-stat__value">{homeData.stats.categories}</span>
-              <span className="home-stat__label">Categories</span>
-            </div>
-            <div className="home-stat">
-              <span className="home-stat__value">{homeData.stats.questions}</span>
-              <span className="home-stat__label">Questions</span>
-            </div>
-            <div className="home-stat">
-              <span className="home-stat__value">{homeData.stats.openOaqs}</span>
-              <span className="home-stat__label">Open Q&A</span>
-            </div>
-            <div className="home-stat">
-              <span className="home-stat__value">{homeData.stats.promotedCount}</span>
-              <span className="home-stat__label">Promoted to FAQ</span>
-            </div>
-          </div>
-        )}
       </div>
     </div>
   );

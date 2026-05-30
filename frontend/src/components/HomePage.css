@@ -727,43 +727,11 @@
 .home-status--promoted { color: #2563eb; }
 .home-status--rejected { color: var(--danger); }
 
-/* ── Stats bar ── */
-.home-stats-bar {
-  display: flex;
-  gap: 16px;
-  margin-top: 48px;
-  background: var(--bg-card);
-  border-radius: 16px;
-  padding: 24px 32px;
-  border: 1px solid var(--border);
-  justify-content: space-around;
-  text-align: center;
-}
-
-.home-stat {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-
-.home-stat__value {
-  font-size: 1.8rem;
-  font-weight: 800;
-  color: var(--accent);
-}
-
-.home-stat__label {
-  font-size: 0.8rem;
-  color: var(--text-light);
-  font-weight: 500;
-}
-
 /* ── Responsive ── */
 @media (max-width: 768px) {
   .home-title { font-size: 1.8rem; }
   .home-gradient { height: 360px; }
   .home-category-grid { grid-template-columns: repeat(2, 1fr); }
-  .home-stats-bar { flex-wrap: wrap; gap: 12px; }
   .home-latest-item { flex-direction: column; align-items: flex-start; gap: 4px; }
   .home-latest-item__meta { margin-left: 0; }
 }
