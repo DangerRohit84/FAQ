@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
+import AutocorrectInput from './AutocorrectInput';
 import { useNavigate } from 'react-router-dom';
 import FAQItem from './FAQItem';
 import './HomePage.css';
@@ -158,13 +159,12 @@ function HomePage() {
               <svg className="home-search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
                 <circle cx="11" cy="11" r="8" /><path d="m21 21-4.35-4.35" />
               </svg>
-              <input
-                ref={searchInputRef}
-                type="text"
+              <AutocorrectInput
                 className="home-search-input"
                 placeholder="Search questions, keywords, or topics...  (press / to focus)"
                 value={searchQuery}
                 onChange={e => setSearchQuery(e.target.value)}
+                inputRef={searchInputRef}
               />
               {micSupported && (
                 <button

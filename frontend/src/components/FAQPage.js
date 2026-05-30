@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import FAQItem from './FAQItem';
+import AutocorrectInput from './AutocorrectInput';
 import './FAQPage.css';
 
 function FAQPage() {
@@ -144,8 +145,7 @@ function FAQPage() {
               <circle cx="11" cy="11" r="8" />
               <path d="m21 21-4.35-4.35" />
             </svg>
-            <input
-              type="text"
+            <AutocorrectInput
               className="faq-search-input"
               placeholder="Search questions or keywords..."
               value={searchQuery}

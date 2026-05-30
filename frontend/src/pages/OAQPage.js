@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import AutocorrectInput from '../components/AutocorrectInput';
 import './OAQPage.css';
 
 function OAQPage() {
@@ -194,7 +195,8 @@ function OAQPage() {
           </div>
           {showForm && (
             <form onSubmit={handleSubmit}>
-              <textarea
+              <AutocorrectInput
+                as="textarea"
                 className="oaq-textarea"
                 placeholder="What do you need help with? Be specific..."
                 value={newQuestion}
