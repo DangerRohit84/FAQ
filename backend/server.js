@@ -17,6 +17,20 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 const groqApiKey = process.env.GROQ_API_KEY;
 
+/* ── Text indexes & search cache ── */
+const searchCache = new Map();
+const SEARCH_CACHE_TTL = 60000;
+
+async function ensureIndexes() {
+  try {
+    await FAQ.collection.createIndex({ 'questions.q': 'text', 'questions.a': 'text' }, { name: 'faq_text' });
+    await OAQ.collection.createIndex({ question: 'text' }, { name: 'oaq_text' });
+    console.log('Text indexes ready');
+  } catch (e) {
+    console.log('Index note:', e.message);
+  }
+}
+
 /* ── FAQ cache (5 min TTL) ── */
 let faqCache = null;
 let faqCacheTime = 0;
@@ -25,7 +39,10 @@ const MONGO_URI = process.env.MONGO_URI || 'mongodb://localhost:27017/faq-app';
 
 function connectDB(retrying) {
   mongoose.connect(MONGO_URI, { serverSelectionTimeoutMS: 15000 })
-    .then(() => console.log('Connected to MongoDB' + (retrying ? ' (retry)' : '')))
+    .then(() => {
+      console.log('Connected to MongoDB' + (retrying ? ' (retry)' : ''));
+      if (!retrying) ensureIndexes();
+    })
     .catch(err => {
       console.error('MongoDB connection error:', err.message);
       if (!retrying) {
@@ -65,35 +82,98 @@ app.get('/api/faqs', async (req, res) => {
   }
 });
 
-/* ── Smart search with fuzzy matching ── */
+/* ── Full-text search (like large-scale sites) ── */
 app.get('/api/faqs/search', async (req, res) => {
   try {
-    const query = req.query.q?.toLowerCase() || '';
-    const faqs = await FAQ.find().lean();
+    const query = req.query.q?.trim() || '';
+    if (!query || query.length < 3) {
+      const faqs = await FAQ.find().lean();
+      return res.json(faqs);
+    }
 
-    if (!query || query.length < 3) return res.json(faqs);
+    const cacheKey = 'faqs:' + query.toLowerCase();
+    const cached = searchCache.get(cacheKey);
+    if (cached && Date.now() - cached.ts < SEARCH_CACHE_TTL) {
+      return res.json(cached.data);
+    }
 
-    const escaped = query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-    const fuzzy = query.length >= 3 ? escaped.split('').join('.*') : escaped;
-    const regex = new RegExp(fuzzy, 'i');
-    const wordMatch = text => text.split(/\s+/).some(w => regex.test(w));
+    /* Full-text search via aggregation: unwind → score → rank → group */
+    const pipe = [
+      { $match: { $text: { $search: query } } },
+      { $unwind: '$questions' },
+      { $match: { $text: { $search: query } } },
+      {
+        $addFields: {
+          score: { $meta: 'textScore' },
+          qLower: { $toLower: '$questions.q' },
+          aLower: { $toLower: '$questions.a' },
+        },
+      },
+      {
+        $addFields: {
+          _relevance: {
+            $cond: [{ $gte: [{ $indexOfCP: ['$qLower', query.toLowerCase()] }, 0] }, 3,
+              { $cond: [{ $gte: [{ $indexOfCP: ['$aLower', query.toLowerCase()] }, 0] }, 1, 0] },
+            ],
+          },
+        },
+      },
+      { $sort: { score: -1, _relevance: -1 } },
+      { $limit: 20 },
+      {
+        $group: {
+          _id: '$_id',
+          category: { $first: '$category' },
+          icon: { $first: '$icon' },
+          questions: { $push: '$$ROOT' },
+        },
+      },
+      {
+        $project: {
+          _id: 1,
+          category: 1,
+          icon: 1,
+          questions: {
+            $map: {
+              input: '$questions',
+              as: 'q',
+              in: {
+                _id: '$$q.questions._id',
+                q: '$$q.questions.q',
+                a: '$$q.questions.a',
+                source: '$$q.questions.source',
+                resolved: '$$q.questions.resolved',
+                views: '$$q.questions.views',
+                _relevance: '$$q._relevance',
+                score: '$$q.score',
+              },
+            },
+          },
+        },
+      },
+    ];
 
-    const results = faqs.map(cat => ({
-      ...cat,
-      questions: cat.questions
-        .filter(item => wordMatch(item.q) || wordMatch(item.a))
-        .map(item => ({
-          ...item,
-          _relevance:
-            (item.q.toLowerCase().includes(query) ? 3 : 0) +
-            (item.a.toLowerCase().includes(query) ? 1 : 0),
-        }))
-        .sort((a, b) => b._relevance - a._relevance),
-    })).filter(cat => cat.questions.length > 0);
-
+    const results = await FAQ.aggregate(pipe);
+    searchCache.set(cacheKey, { data: results, ts: Date.now() });
     res.json(results);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    /* Fallback to regex search if $text fails */
+    try {
+      const query2 = req.query.q?.toLowerCase() || '';
+      const words = query2.replace(/[.*+?^${}()|[\]\\]/g, '\\$&').split(/\s+/).filter(Boolean);
+      const faqs = await FAQ.find({
+        $or: words.map(w => ({ 'questions.q': { $regex: w, $options: 'i' } })),
+      }).lean();
+      const results = faqs.map(cat => ({
+        ...cat,
+        questions: cat.questions.filter(q =>
+          words.every(w => q.q.toLowerCase().includes(w))
+        ),
+      })).filter(cat => cat.questions.length > 0);
+      res.json(results);
+    } catch {
+      res.status(500).json({ error: err.message });
+    }
   }
 });
 
@@ -110,40 +190,66 @@ app.post('/api/faqs/:catId/questions/:qId/view', async (req, res) => {
   }
 });
 
-/* ── Unified search (FAQ + OAQ) ── */
+/* ── Unified search (FAQ + OAQ) with full-text ── */
 app.get('/api/search/all', async (req, res) => {
   try {
-    const query = req.query.q?.toLowerCase() || '';
+    const query = req.query.q?.trim() || '';
     if (!query || query.length < 3) return res.json({ faq: [], oaq: [] });
 
-    const escaped = query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-    const fuzzy = query.length >= 3 ? escaped.split('').join('.*') : escaped;
-    const regex = new RegExp(fuzzy, 'i');
-    const wordMatch = text => text.split(/\s+/).some(w => regex.test(w));
+    const cacheKey = 'all:' + query.toLowerCase();
+    const cached = searchCache.get(cacheKey);
+    if (cached && Date.now() - cached.ts < SEARCH_CACHE_TTL) {
+      return res.json(cached.data);
+    }
 
-    const [faqResults, oaqResults] = await Promise.all([
-      FAQ.find({ $or: [{ 'questions.q': { $regex: regex } }, { 'questions.a': { $regex: regex } }] }).lean(),
-      OAQ.find({ question: { $regex: regex }, status: { $ne: 'rejected' } })
+    const [faqPipe, oaqResults] = await Promise.all([
+      FAQ.aggregate([
+        { $match: { $text: { $search: query } } },
+        { $unwind: '$questions' },
+        { $match: { $text: { $search: query } } },
+        { $addFields: { score: { $meta: 'textScore' } } },
+        { $sort: { score: -1 } },
+        { $limit: 10 },
+        {
+          $group: {
+            _id: '$_id',
+            category: { $first: '$category' },
+            icon: { $first: '$icon' },
+            questions: { $push: { q: '$questions.q', a: '$questions.a', source: '$questions.source', views: '$questions.views' } },
+          },
+        },
+        { $project: { _id: 1, category: 1, icon: 1, questions: 1 } },
+      ]),
+      OAQ.find(
+        { $text: { $search: query }, status: { $ne: 'rejected' } },
+        { score: { $meta: 'textScore' } },
+      )
+        .sort({ score: -1 })
+        .limit(10)
         .populate('submittedBy', 'name')
         .lean({ virtuals: true }),
     ]);
 
-    const faq = faqResults.map(cat => ({
-      ...cat,
-      questions: cat.questions
-        .filter(item => wordMatch(item.q) || wordMatch(item.a))
-        .map(item => ({
-          ...item,
-          _relevance:
-            (item.q.toLowerCase().includes(query) ? 3 : 0) +
-            (item.a.toLowerCase().includes(query) ? 1 : 0),
-        }))
-        .sort((a, b) => b._relevance - a._relevance),
-    })).filter(cat => cat.questions.length > 0);
-
-    res.json({ faq, oaq: oaqResults });
+    const result = { faq: faqPipe, oaq: oaqResults };
+    searchCache.set(cacheKey, { data: result, ts: Date.now() });
+    res.json(result);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    /* Fallback regex search */
+    try {
+      const q = req.query.q?.toLowerCase() || '';
+      const words = q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&').split(/\s+/).filter(Boolean);
+      const [faqFallback, oaqFallback] = await Promise.all([
+        FAQ.find({ $or: words.map(w => ({ 'questions.q': { $regex: w, $options: 'i' } })) }).lean(),
+        OAQ.find({
+          $or: words.map(w => ({ question: { $regex: w, $options: 'i' } })),
+          status: { $ne: 'rejected' },
+        }).populate('submittedBy', 'name').lean({ virtuals: true }),
+      ]);
+      const faq = faqFallback.map(c => ({ ...c, questions: c.questions.filter(q => words.every(w => q.q.toLowerCase().includes(w))) })).filter(c => c.questions.length > 0);
+      res.json({ faq, oaq: oaqFallback });
+    } catch {
+      res.status(500).json({ error: err.message });
+    }
   }
 });
 
@@ -154,33 +260,39 @@ app.get('/api/search/suggest', async (req, res) => {
     if (!query || query.length < 2) return res.json([]);
 
     const escaped = query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+    /* Prefix match for speed: finds questions starting with any word in the query */
+    const words = escaped.split(/\s+/).filter(Boolean);
+    const prefixRegex = words.map(w => new RegExp('\\b' + w, 'i'));
+
     const allQas = await FAQ.aggregate([
       { $unwind: '$questions' },
-      { $project: { _id: 0, cat: '$category', q: '$questions.q', a: '$questions.a' } },
+      {
+        $match: {
+          $or: prefixRegex.map(r => ({ 'questions.q': { $regex: r } })),
+        },
+      },
+      { $project: { _id: 0, cat: '$category', q: '$questions.q' } },
+      { $limit: 30 },
     ]);
 
-    const oaqs = await OAQ.find({ status: { $ne: 'rejected' } }).select('question').lean();
+    const oaqs = await OAQ.find(
+      { $or: prefixRegex.map(r => ({ question: { $regex: r } })), status: { $ne: 'rejected' } },
+    ).select('question').limit(20).lean();
 
+    const seen = new Set();
     const suggestions = [];
 
     for (const item of allQas) {
-      if (item.q.toLowerCase().includes(escaped)) suggestions.push({ text: item.q, type: 'FAQ', cat: item.cat });
-      else if (item.a.toLowerCase().includes(escaped)) suggestions.push({ text: item.a.slice(0, 80), type: 'FAQ', cat: item.cat });
+      const key = item.q.toLowerCase();
+      if (!seen.has(key)) { seen.add(key); suggestions.push({ text: item.q, type: 'FAQ', cat: item.cat }); }
     }
-
     for (const item of oaqs) {
-      if (item.question.toLowerCase().includes(escaped)) suggestions.push({ text: item.question, type: 'OAQ' });
+      const key = item.question.toLowerCase();
+      if (!seen.has(key)) { seen.add(key); suggestions.push({ text: item.question, type: 'OAQ' }); }
     }
 
-    const seen = new Set();
-    const unique = suggestions.filter(s => {
-      const key = s.text.toLowerCase();
-      if (seen.has(key)) return false;
-      seen.add(key);
-      return true;
-    });
-
-    res.json(unique.slice(0, 8));
+    res.json(suggestions.slice(0, 8));
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

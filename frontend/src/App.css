@@ -5,7 +5,8 @@
 /* ── Autocorrect dropdown ── */
 .autocorrect-wrapper {
   position: relative;
-  width: 100%;
+  flex: 1;
+  display: flex;
 }
 
 .autocorrect-dropdown {
