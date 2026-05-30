@@ -1,5 +1,6 @@
 const express = require('express');
 const mongoose = require('mongoose');
+const Groq = require('groq-sdk');
 const OAQ = require('../models/OAQ');
 const FAQ = require('../models/FAQ');
 const Notification = require('../models/Notification');
@@ -7,6 +8,7 @@ const { auth } = require('../middleware/auth');
 const { admin } = require('../middleware/admin');
 
 const router = express.Router();
+const groqApiKey = process.env.GROQ_API_KEY;
 
 /* ── List OAQs ── */
 router.get('/', async (req, res) => {
@@ -81,14 +83,6 @@ router.post('/', auth, async (req, res) => {
       return matched / allQWords.length;
     };
 
-    /* fuzzy char-level score for out-of-scope detection */
-    const fuzzyTerms = words.map(w => new RegExp(w.split('').join('.*'), 'i'));
-    const fuzzyScore = (text) => {
-      const lower = text.toLowerCase();
-      const matches = fuzzyTerms.filter(reg => reg.test(lower));
-      return matches.length / words.length;
-    };
-
     const allDupes = [
       ...faqDupes.flatMap(c =>
         c.questions
@@ -101,20 +95,33 @@ router.post('/', auth, async (req, res) => {
     ].sort((a, b) => b.score - a.score);
     const topDupes = allDupes.slice(0, 1);
 
-    /* out-of-scope detection */
-    let outOfScope = false;
-    if (allDupes.length === 0) {
-      const allFaqTexts = faqDupes.flatMap(c => c.questions.map(item => item.q + ' ' + item.a));
-      let bestFuzzy = 0;
-      for (const text of allFaqTexts) {
-        const fs = fuzzyScore(text);
-        if (fs > bestFuzzy) bestFuzzy = fs;
-      }
-      outOfScope = bestFuzzy < 0.2;
-    }
+    if (topDupes.length > 0 && groqApiKey) {
+      /* Use Groq AI to decide if it's truly a duplicate */
+      const groq = new Groq({ apiKey: groqApiKey });
+      const dup = topDupes[0];
+      const prompt = `You are comparing two questions to decide if they are asking the same thing.
 
-    if (topDupes.length > 0) {
-      return res.status(409).json({ duplicates: topDupes, outOfScope });
+Existing question: "${dup.text}"
+New question: "${question.trim()}"
+
+Are these two questions asking the same thing? Reply with ONLY a JSON object:
+{
+  "isDuplicate": true/false,
+  "reason": "brief explanation"
+}`;
+      const completion = await groq.chat.completions.create({
+        messages: [{ role: 'user', content: prompt }],
+        model: 'llama-3.3-70b-versatile',
+        temperature: 0.1,
+        response_format: { type: 'json_object' },
+      });
+      const result = JSON.parse(completion.choices[0]?.message?.content || '{}');
+      if (result.isDuplicate) {
+        return res.status(409).json({ duplicates: topDupes, aiReason: result.reason || '' });
+      }
+    } else if (topDupes.length > 0) {
+      /* No Groq key — fall back to word-overlap blocking */
+      return res.status(409).json({ duplicates: topDupes });
     }
 
     const oaq = await OAQ.create({

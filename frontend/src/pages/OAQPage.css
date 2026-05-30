@@ -101,6 +101,17 @@
   margin-bottom: 4px;
 }
 
+.oaq-duplicate-reason {
+  font-size: 0.8rem;
+  margin-top: 6px;
+  font-style: italic;
+  color: #b45309;
+}
+
+[data-theme="dark"] .oaq-duplicate-reason {
+  color: #fbbf24;
+}
+
 .oaq-outscope {
   background: #fef2f2;
   border: 1px solid #fecaca;

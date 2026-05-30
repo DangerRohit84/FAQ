@@ -15,6 +15,7 @@ function OAQPage() {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
   const [duplicates, setDuplicates] = useState([]);
+  const [aiReason, setAiReason] = useState('');
   const [outOfScope, setOutOfScope] = useState(false);
   const [sort, setSort] = useState('trending');
   const [expandedId, setExpandedId] = useState(null);
@@ -62,6 +63,7 @@ function OAQPage() {
       const data = await res.json();
       if (res.status === 409) {
         setDuplicates(data.duplicates || []);
+        setAiReason(data.aiReason || '');
         return;
       }
       if (!res.ok) { setError(data.error); return; }
@@ -247,6 +249,7 @@ function OAQPage() {
                       </li>
                     ))}
                   </ul>
+                  {aiReason && <p className="oaq-duplicate-reason">{aiReason}</p>}
                 </div>
               )}
               {outOfScope && duplicates.length === 0 && (
