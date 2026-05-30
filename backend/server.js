@@ -106,12 +106,27 @@ app.get('/api/search/all', async (req, res) => {
     const fuzzy = query.length >= 3 ? escaped.split('').join('.*') : escaped;
     const regex = new RegExp(fuzzy, 'i');
 
-    const [faqResults, oaqResults] = await Promise.all([
-      FAQ.find({ $or: [{ 'questions.q': { $regex: regex } }, { 'questions.a': { $regex: regex } }] }).lean(),
-      OAQ.find({ question: { $regex: regex }, status: { $ne: 'rejected' } })
-        .populate('submittedBy', 'name')
-        .lean({ virtuals: true }),
-    ]);
+    let faqResults = [];
+    let oaqResults = [];
+
+    const dbConnected = mongoose.connection.readyState === 1;
+
+    if (dbConnected) {
+      try {
+        [faqResults, oaqResults] = await Promise.all([
+          FAQ.find({ $or: [{ 'questions.q': { $regex: regex } }, { 'questions.a': { $regex: regex } }] }).lean(),
+          OAQ.find({ question: { $regex: regex }, status: { $ne: 'rejected' } })
+            .populate('submittedBy', 'name')
+            .lean({ virtuals: true }),
+        ]);
+      } catch (e) {
+        console.warn('Mongoose query failed for unified search, using static fallback');
+        faqResults = require('./data/fallbackFaqs.json');
+      }
+    } else {
+      console.warn('MongoDB not connected. Loading static fallback for unified search');
+      faqResults = require('./data/fallbackFaqs.json');
+    }
 
     const faq = faqResults.map(cat => ({
       ...cat,
@@ -139,12 +154,32 @@ app.get('/api/search/suggest', async (req, res) => {
     if (!query || query.length < 2) return res.json([]);
 
     const escaped = query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-    const allQas = await FAQ.aggregate([
-      { $unwind: '$questions' },
-      { $project: { _id: 0, cat: '$category', q: '$questions.q', a: '$questions.a' } },
-    ]);
+    let allQas = [];
+    let oaqs = [];
 
-    const oaqs = await OAQ.find({ status: { $ne: 'rejected' } }).select('question').lean();
+    const dbConnected = mongoose.connection.readyState === 1;
+
+    if (dbConnected) {
+      try {
+        allQas = await FAQ.aggregate([
+          { $unwind: '$questions' },
+          { $project: { _id: 0, cat: '$category', q: '$questions.q', a: '$questions.a' } },
+        ]);
+        oaqs = await OAQ.find({ status: { $ne: 'rejected' } }).select('question').lean();
+      } catch (e) {
+        console.warn('Mongoose query failed for legacy suggestions, using static fallback');
+        const staticData = require('./data/fallbackFaqs.json');
+        allQas = staticData.flatMap(c => 
+          c.questions.map(q => ({ cat: c.category, q: q.q, a: q.a }))
+        );
+      }
+    } else {
+      console.warn('MongoDB not connected. Loading static fallback for legacy suggestions');
+      const staticData = require('./data/fallbackFaqs.json');
+      allQas = staticData.flatMap(c => 
+        c.questions.map(q => ({ cat: c.category, q: q.q, a: q.a }))
+      );
+    }
 
     const suggestions = [];
 
