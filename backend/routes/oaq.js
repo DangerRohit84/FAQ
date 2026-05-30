@@ -153,13 +153,38 @@ Are these two questions asking the same thing? Reply with ONLY a JSON object:
       answers: { $exists: true, $not: { $size: 0 } },
     }).lean({ virtuals: true });
 
-    const scored = similarOpen
+    let scored = similarOpen
       .map(o => ({
         ...o,
         _score: score(o.question),
       }))
       .filter(o => o._score > 0.4)
       .sort((a, b) => b._score - a._score);
+
+    if (scored.length >= 1 && groqApiKey) {
+      /* Validate similarity with Groq AI before promoting */
+      const groq = new Groq({ apiKey: groqApiKey });
+      for (const candidate of scored) {
+        const completion = await groq.chat.completions.create({
+          messages: [{
+            role: 'user',
+            content: `Are these two questions asking about the same topic?
+Question 1: "${candidate.question}"
+Question 2: "${question.trim()}"
+Reply ONLY with JSON: { "sameTopic": true/false }`,
+          }],
+          model: 'llama-3.3-70b-versatile',
+          temperature: 0.1,
+          response_format: { type: 'json_object' },
+        });
+        const result = JSON.parse(completion.choices[0]?.message?.content || '{}');
+        if (result.sameTopic) {
+          scored = [candidate];
+          break;
+        }
+      }
+      if (scored.length > 1) scored = [];
+    }
 
     if (scored.length >= 1) {
       const best = scored[0];
