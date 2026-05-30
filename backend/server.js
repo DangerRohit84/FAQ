@@ -9,6 +9,7 @@ const oaqRoutes = require('./routes/oaq');
 const notificationRoutes = require('./routes/notifications');
 const reportRoutes = require('./routes/reports');
 const aiRoutes = require('./routes/ai');
+const suggestionsRoutes = require('./routes/suggestions');
 const { auth } = require('./middleware/auth');
 
 const app = express();
@@ -27,6 +28,7 @@ app.use('/api/oaq', oaqRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/reports', reportRoutes);
 app.use('/api/ai', aiRoutes);
+app.use('/api/suggestions', suggestionsRoutes);
 
 /* ── FAQ listing ── */
 app.get('/api/faqs', async (req, res) => {
