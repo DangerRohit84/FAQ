@@ -168,16 +168,18 @@
   border-radius: 16px;
   font-size: 1.05rem;
   font-family: inherit;
-  background: rgba(255, 255, 255, 0.85);
+  /* FIX: Use theme variable instead of static light-rgba */
+  background: var(--bg-card); 
   backdrop-filter: blur(8px);
-  color: var(--text-secondary);
+  /* FIX: Ensure text matches primary theme color instead of a fixed light/dark mode variation */
+  color: var(--text-primary); 
   transition: all 0.3s;
   outline: none;
   box-shadow: var(--shadow-md);
 }
 
 .faq-search-input::placeholder {
-  color: var(--text-light);
+  color: var(--text-muted);
 }
 
 .faq-search-input:focus {
