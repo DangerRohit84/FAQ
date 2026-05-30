@@ -1,5 +1,6 @@
 const natural = require('natural');
 const FAQ = require('../models/FAQ');
+const mongoose = require('mongoose');
 
 /**
  * Normalizes and tokenizes text.
@@ -81,10 +82,16 @@ function getPrefixMatchScore(questionText, queryText) {
  */
 async function getAllFAQs() {
   let categories = [];
-  try {
-    categories = await FAQ.find().lean();
-  } catch (err) {
-    console.warn('Mongoose query failed. Loading fallback static FAQ data.', err.message);
+  const dbConnected = mongoose.connection.readyState === 1;
+
+  if (dbConnected) {
+    try {
+      categories = await FAQ.find().lean();
+    } catch (err) {
+      console.warn('Mongoose query failed. Loading fallback static FAQ data.', err.message);
+    }
+  } else {
+    console.warn('MongoDB is not connected. Loading fallback static FAQ data instantly.');
   }
 
   if (!categories || categories.length === 0) {
