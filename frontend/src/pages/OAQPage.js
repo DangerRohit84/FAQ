@@ -46,6 +46,35 @@ function OAQPage() {
       .catch(() => {});
   }, []);
 
+  const handleSubmit = async e => {
+    e.preventDefault();
+    if (!user) return navigate('/login');
+    setError('');
+    setDuplicates([]);
+    setAiReason('');
+    setSubmitting(true);
+    try {
+      const res = await authFetch('/api/oaq', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ question: newQuestion, description: newDescription, category: newCategory }),
+      });
+      const data = await res.json();
+      if (res.status === 409) {
+        setDuplicates(data.duplicates || []);
+        setAiReason(data.aiReason || '');
+        return;
+      }
+      if (!res.ok) { setError(data.error); return; }
+      setNewQuestion('');
+      setNewDescription('');
+      setNewCategory('');
+      setShowForm(false);
+      fetchOaqs();
+    } catch { setError('Connection error'); }
+    finally { setSubmitting(false); }
+  };
+
   const fetchRelated = async (question) => {
     const res = await fetch(`/api/ai/related?q=${encodeURIComponent(question)}`);
     if (res.ok) {
