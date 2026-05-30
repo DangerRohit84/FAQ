@@ -80,14 +80,28 @@ function getPrefixMatchScore(questionText, queryText) {
  * Retrieve all FAQs flattened into a clean document structure.
  */
 async function getAllFAQs() {
-  const categories = await FAQ.find().lean();
+  let categories = [];
+  try {
+    categories = await FAQ.find().lean();
+  } catch (err) {
+    console.warn('Mongoose query failed. Loading fallback static FAQ data.', err.message);
+  }
+
+  if (!categories || categories.length === 0) {
+    try {
+      categories = require('../data/fallbackFaqs.json');
+    } catch (e) {
+      console.error('Failed to load static fallback FAQs:', e.message);
+      categories = [];
+    }
+  }
+
   const allFaqs = [];
-  
   for (const cat of categories) {
     if (cat.questions && Array.isArray(cat.questions)) {
       for (const qObj of cat.questions) {
         allFaqs.push({
-          _id: qObj._id,
+          _id: qObj._id || `fallback-${Math.random().toString(36).substring(2, 9)}`,
           category: cat.category,
           categoryIcon: cat.icon,
           q: qObj.q,

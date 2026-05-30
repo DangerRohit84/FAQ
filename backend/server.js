@@ -33,7 +33,15 @@ app.use('/api/suggestions', suggestionsRoutes);
 /* ── FAQ listing ── */
 app.get('/api/faqs', async (req, res) => {
   try {
-    const faqs = await FAQ.find().lean();
+    let faqs = [];
+    try {
+      faqs = await FAQ.find().lean();
+    } catch (err) {
+      console.warn('Mongoose query failed for /api/faqs, loading static fallback.');
+    }
+    if (!faqs || faqs.length === 0) {
+      faqs = require('./data/fallbackFaqs.json');
+    }
     res.json(faqs);
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -166,23 +174,59 @@ app.get('/api/home', async (req, res) => {
     const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
     const monthAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
 
-    const [categories, totalQuestions, faqData, trendingOaqs, latestOaqs, kbStats] = await Promise.all([
-      FAQ.countDocuments(),
-      FAQ.aggregate([{ $unwind: '$questions' }, { $count: 'total' }]),
-      FAQ.find().select('category icon questions.q questions.a questions._id questions.source questions.resolved questions.views').lean(),
-      OAQ.find({ createdAt: { $gte: sevenDaysAgo }, status: { $ne: 'rejected' } })
-        .populate('submittedBy', 'name')
-        .lean({ virtuals: true }),
-      OAQ.find({ status: { $ne: 'rejected' } })
-        .sort({ createdAt: -1 })
-        .limit(5)
-        .populate('submittedBy', 'name')
-        .lean({ virtuals: true }),
-      OAQ.aggregate([
-        { $match: { status: 'promoted' } },
-        { $group: { _id: null, count: { $sum: 1 }, totalVotes: { $sum: { $size: { $ifNull: ['$votedUpBy', []] } } } } },
-      ]),
-    ]);
+    let categories = 0;
+    let totalQuestionsCount = 0;
+    let faqData = [];
+    let trendingOaqs = [];
+    let latestOaqs = [];
+    let kbStats = [];
+    let openOaqsCount = 0;
+
+    try {
+      const [cats, totalQ, fData, tOaqs, lOaqs, kStats, openCount] = await Promise.all([
+        FAQ.countDocuments(),
+        FAQ.aggregate([{ $unwind: '$questions' }, { $count: 'total' }]),
+        FAQ.find().select('category icon questions.q questions.a questions._id questions.source questions.resolved questions.views').lean(),
+        OAQ.find({ createdAt: { $gte: sevenDaysAgo }, status: { $ne: 'rejected' } })
+          .populate('submittedBy', 'name')
+          .lean({ virtuals: true }),
+        OAQ.find({ status: { $ne: 'rejected' } })
+          .sort({ createdAt: -1 })
+          .limit(5)
+          .populate('submittedBy', 'name')
+          .lean({ virtuals: true }),
+        OAQ.aggregate([
+          { $match: { status: 'promoted' } },
+          { $group: { _id: null, count: { $sum: 1 }, totalVotes: { $sum: { $size: { $ifNull: ['$votedUpBy', []] } } } } },
+        ]),
+        OAQ.countDocuments({ status: 'open' })
+      ]);
+      categories = cats;
+      totalQuestionsCount = totalQ[0]?.total || 0;
+      faqData = fData;
+      trendingOaqs = tOaqs;
+      latestOaqs = lOaqs;
+      kbStats = kStats;
+      openOaqsCount = openCount;
+    } catch (e) {
+      console.warn('Mongoose query failed for /api/home, using static fallback');
+      const staticData = require('./data/fallbackFaqs.json');
+      categories = staticData.length;
+      faqData = staticData.map((c, i) => ({
+        _id: c._id || `fallback-cat-${i}`,
+        category: c.category,
+        icon: c.icon,
+        questions: c.questions.map((q, j) => ({
+          _id: q._id || `fallback-q-${i}-${j}`,
+          q: q.q,
+          a: q.a,
+          source: q.source || 'official',
+          resolved: q.resolved !== false,
+          views: q.views || 0
+        }))
+      }));
+      totalQuestionsCount = faqData.reduce((acc, c) => acc + c.questions.length, 0);
+    }
 
     const categoryCards = faqData.map(c => ({
       _id: c._id,
@@ -206,8 +250,8 @@ app.get('/api/home', async (req, res) => {
     res.json({
       stats: {
         categories,
-        questions: totalQuestions[0]?.total || 0,
-        openOaqs: await OAQ.countDocuments({ status: 'open' }),
+        questions: totalQuestionsCount,
+        openOaqs: openOaqsCount,
         promotedCount,
         promotedVotes,
       },
