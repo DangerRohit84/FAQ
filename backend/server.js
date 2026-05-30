@@ -42,10 +42,9 @@ app.get('/api/faqs', async (req, res) => {
 app.get('/api/faqs/search', async (req, res) => {
   try {
     const query = req.query.q?.toLowerCase() || '';
-    if (!query) {
-      const faqs = await FAQ.find().lean();
-      return res.json(faqs);
-    }
+    const faqs = await FAQ.find().lean();
+
+    if (!query || query.length < 3) return res.json(faqs);
 
     const escaped = query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
     const fuzzy = query.length >= 3 ? escaped.split('').join('.*') : escaped;
@@ -87,7 +86,7 @@ app.post('/api/faqs/:catId/questions/:qId/view', async (req, res) => {
 app.get('/api/search/all', async (req, res) => {
   try {
     const query = req.query.q?.toLowerCase() || '';
-    if (!query) return res.json({ faq: [], oaq: [] });
+    if (!query || query.length < 3) return res.json({ faq: [], oaq: [] });
 
     const escaped = query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
     const fuzzy = query.length >= 3 ? escaped.split('').join('.*') : escaped;
