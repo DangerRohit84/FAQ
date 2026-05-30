@@ -16,7 +16,6 @@ function OAQPage() {
   const [error, setError] = useState('');
   const [duplicates, setDuplicates] = useState([]);
   const [aiReason, setAiReason] = useState('');
-  const [outOfScope, setOutOfScope] = useState(false);
   const [sort, setSort] = useState('trending');
   const [expandedId, setExpandedId] = useState(null);
   const [newAnswer, setNewAnswer] = useState('');
@@ -46,50 +45,6 @@ function OAQPage() {
       })
       .catch(() => {});
   }, []);
-
-  const handleSubmit = async e => {
-    e.preventDefault();
-    if (!user) return navigate('/login');
-    setError('');
-    setDuplicates([]);
-    setOutOfScope(false);
-    setSubmitting(true);
-    try {
-      const res = await authFetch('/api/oaq', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ question: newQuestion, description: newDescription, category: newCategory }),
-      });
-      const data = await res.json();
-      if (res.status === 409) {
-        setDuplicates(data.duplicates || []);
-        setAiReason(data.aiReason || '');
-        return;
-      }
-      if (!res.ok) { setError(data.error); return; }
-      setNewQuestion('');
-      setNewDescription('');
-      setNewCategory('');
-      setShowForm(false);
-      fetchOaqs();
-    } catch { setError('Connection error'); }
-    finally { setSubmitting(false); }
-  };
-
-  const aiCheckDuplicates = async () => {
-    if (!newQuestion.trim() || newQuestion.length < 5) return;
-    setOutOfScope(false);
-    const res = await fetch('/api/ai/check-duplicate', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ question: newQuestion }),
-    });
-    if (res.ok) {
-      const data = await res.json();
-      setDuplicates(data.duplicates || []);
-      setOutOfScope(data.outOfScope || false);
-    }
-  };
 
   const fetchRelated = async (question) => {
     const res = await fetch(`/api/ai/related?q=${encodeURIComponent(question)}`);
@@ -206,7 +161,7 @@ function OAQPage() {
           <div className="oaq-submit-header">
             <h2>Ask a question</h2>
             {!showForm && <button className="oaq-btn oaq-btn--primary" onClick={() => setShowForm(true)}>+ New question</button>}
-            {showForm && <button className="oaq-btn oaq-btn--ghost" onClick={() => { setShowForm(false); setDuplicates([]); setOutOfScope(false); setError(''); }}>Cancel</button>}
+            {showForm && <button className="oaq-btn oaq-btn--ghost" onClick={() => { setShowForm(false); setDuplicates([]); setError(''); }}>Cancel</button>}
           </div>
           {showForm && (
             <form onSubmit={handleSubmit}>
@@ -216,7 +171,6 @@ function OAQPage() {
                 value={newQuestion}
                 onChange={e => setNewQuestion(e.target.value)}
                 rows={3}
-                onBlur={aiCheckDuplicates}
               />
               <textarea
                 className="oaq-textarea oaq-textarea--sm"
@@ -237,11 +191,10 @@ function OAQPage() {
                   <option value="Other">Other</option>
                 </select>
               </div>
-              {error && <div className="oaq-error">{error}</div>}
-              {duplicates.length > 0 && (
-                <div className="oaq-duplicates">
-                  <strong>AI found a similar question:</strong>
-                  <ul>
+              {duplicates.length > 0 ? (
+                <div className="oaq-error" style={{ border: '1.5px solid var(--danger)', background: 'var(--danger-bg)' }}>
+                  <strong>⚠️ This question already exists:</strong>
+                  <ul style={{ margin: '6px 0 4px 18px', fontSize: '0.85rem' }}>
                     {duplicates.map((d, i) => (
                       <li key={i}>
                         {d.source === 'FAQ' ? '📖 FAQ: ' : '💬 OAQ: '}
@@ -249,14 +202,11 @@ function OAQPage() {
                       </li>
                     ))}
                   </ul>
-                  {aiReason && <p className="oaq-duplicate-reason">{aiReason}</p>}
+                  {aiReason && <p style={{ fontSize: '0.8rem', marginTop: 4 }}>{aiReason}</p>}
                 </div>
-              )}
-              {outOfScope && duplicates.length === 0 && (
-                <div className="oaq-outscope">
-                  ⚠️ This question doesn't seem related to the Vicharanashala Internship FAQ topics. It may not get relevant answers from the community.
-                </div>
-              )}
+              ) : error ? (
+                <div className="oaq-error">{error}</div>
+              ) : null}
               <button className="oaq-btn oaq-btn--primary" type="submit" disabled={submitting || !newQuestion.trim()}>
                 {submitting ? 'Submitting…' : 'Submit question'}
               </button>
