@@ -117,6 +117,19 @@ Are these two questions asking the same thing? Reply with ONLY a JSON object:
       });
       const result = JSON.parse(completion.choices[0]?.message?.content || '{}');
       if (result.isDuplicate) {
+        /* Notify original asker if duplicate is an OAQ */
+        if (dup.source === 'OAQ' && dup.id) {
+          const originalOaq = await OAQ.findById(dup.id).populate('submittedBy', 'name');
+          if (originalOaq && originalOaq.submittedBy &&
+              originalOaq.submittedBy._id.toString() !== req.user._id.toString()) {
+            await Notification.create({
+              user: originalOaq.submittedBy._id,
+              type: 'related',
+              message: `${req.user.name} asked a similar question: "${question.trim().slice(0, 60)}${question.trim().length > 60 ? '…' : ''}"`,
+              link: '/community',
+            });
+          }
+        }
         return res.status(409).json({ duplicates: topDupes, aiReason: result.reason || '' });
       }
     } else if (topDupes.length > 0) {
@@ -131,6 +144,55 @@ Are these two questions asking the same thing? Reply with ONLY a JSON object:
       submittedBy: req.user._id,
     });
     await oaq.populate('submittedBy', 'name');
+
+    /* ── Similarity-frequency auto-promote ── */
+    const similarOpen = await OAQ.find({
+      _id: { $ne: oaq._id },
+      question: { $regex: new RegExp(words.map(w => w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|'), 'i') },
+      status: { $in: ['open', 'approved'] },
+      answers: { $exists: true, $not: { $size: 0 } },
+    }).lean({ virtuals: true });
+
+    const scored = similarOpen
+      .map(o => ({
+        ...o,
+        _score: score(o.question),
+      }))
+      .filter(o => o._score > 0.4)
+      .sort((a, b) => b._score - a._score);
+
+    if (scored.length >= 1) {
+      const best = scored[0];
+      const bestAnswer = best.answers.find(a => a.accepted) ||
+        best.answers.sort((a, b) => (b.votedUpBy.length - b.votedDownBy.length) - (a.votedUpBy.length - a.votedDownBy.length))[0];
+      if (bestAnswer) {
+        const catName = best.category || 'Community Questions';
+        let targetCat = await FAQ.findOne({ category: catName });
+        if (!targetCat) {
+          targetCat = await FAQ.create({ category: catName, icon: '🌐', questions: [] });
+        }
+        targetCat.questions.push({ q: best.question, a: bestAnswer.text, source: 'community', resolved: true });
+        await targetCat.save();
+
+        await OAQ.findByIdAndUpdate(best._id, { status: 'promoted', $inc: { promotedCount: 1 } });
+
+        if (best.submittedBy) {
+          await Notification.create({
+            user: best.submittedBy,
+            type: 'promoted',
+            message: `Your question was promoted to FAQ (similar questions trend): "${best.question.slice(0, 60)}${best.question.length > 60 ? '…' : ''}"`,
+            link: '/faq',
+          });
+        }
+
+        await Notification.create({
+          user: oaq.submittedBy._id,
+          type: 'related',
+          message: `A similar question was promoted to FAQ: "${best.question.slice(0, 60)}${best.question.length > 60 ? '…' : ''}"`,
+          link: '/faq',
+        });
+      }
+    }
 
     res.status(201).json(oaq);
   } catch (err) {
@@ -160,6 +222,23 @@ router.post('/:id/answers', auth, async (req, res) => {
         message: `${req.user.name} answered your question: "${oaq.question.slice(0, 60)}${oaq.question.length > 60 ? '…' : ''}"`,
         link: '/community',
       });
+    }
+
+    /* Notify other answerers about the follow-up */
+    const answererIds = [...new Set(
+      oaq.answers
+        .filter(a => a.submittedBy.toString() !== req.user._id.toString())
+        .map(a => a.submittedBy.toString())
+    )];
+    for (const answererId of answererIds) {
+      if (answererId !== oaq.submittedBy.toString()) {
+        await Notification.create({
+          user: answererId,
+          type: 'follow_up',
+          message: `${req.user.name} added a follow-up answer to "${oaq.question.slice(0, 60)}${oaq.question.length > 60 ? '…' : ''}"`,
+          link: '/community',
+        });
+      }
     }
 
     const updated = await OAQ.findById(oaq._id)

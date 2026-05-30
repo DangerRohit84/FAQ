@@ -57,6 +57,8 @@ function NotificationBell() {
     promoted: '⭐',
     accepted: '✅',
     approved: '👍',
+    related: '🔗',
+    follow_up: '📎',
     system: '🔔',
   };
 
