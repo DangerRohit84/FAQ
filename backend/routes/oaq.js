@@ -142,8 +142,14 @@ router.post('/:id/answers', auth, async (req, res) => {
     if (oaq.status === 'promoted' || oaq.status === 'rejected') {
       return res.status(400).json({ error: 'Cannot answer a promoted or rejected question' });
     }
+    if (oaq.status === 'approved' && req.user.role !== 'admin') {
+      return res.status(400).json({ error: 'This question is closed for new answers' });
+    }
+    if (oaq.submittedBy.toString() === req.user._id.toString()) {
+      return res.status(400).json({ error: 'You cannot answer your own question' });
+    }
 
-    oaq.answers.push({ text: text.trim(), submittedBy: req.user._id });
+    oaq.answers.push({ text: text.trim(), submittedBy: req.user._id, answeredByAdmin: req.user.role === 'admin' });
     await oaq.save();
 
     if (oaq.submittedBy.toString() !== req.user._id.toString()) {
@@ -325,6 +331,7 @@ router.put('/:id/promote', auth, admin, async (req, res) => {
 
     const acceptedAnswer = oaq.answers.find(a => a.accepted);
     const bestAnswer = acceptedAnswer || oaq.answers.sort((a, b) => (b.upvotes - b.downvotes) - (a.upvotes - a.downvotes))[0];
+    if (bestAnswer) bestAnswer.verifiedByAdmin = true;
     const answerText = bestAnswer ? bestAnswer.text : oaq.question;
 
     const catName = oaq.category || 'Community Questions';

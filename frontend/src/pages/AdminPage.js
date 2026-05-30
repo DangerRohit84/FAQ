@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+﻿import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import './AdminPage.css';
@@ -25,6 +25,8 @@ function AdminPage() {
   const [aiResult, setAiResult] = useState({});
   const [aiCheck, setAiCheck] = useState({});
   const [aiCheckLoading, setAiCheckLoading] = useState(null);
+  const [answeringId, setAnsweringId] = useState(null);
+  const [answerText, setAnswerText] = useState('');
 
   useEffect(() => {
     if (authLoading) return;
@@ -80,6 +82,16 @@ function AdminPage() {
   const handleAcceptAnswer = async (oaqId, answerId) => {
     const res = await authFetch(`/api/oaq/${oaqId}/answers/${answerId}/accept`, { method: 'PUT' });
     if (res.ok) fetchOaqs();
+  };
+
+  const handleAdminAnswer = async (oaqId) => {
+    if (!answerText.trim()) return;
+    const res = await authFetch(`/api/oaq/${oaqId}/answers`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ text: answerText }),
+    });
+    if (res.ok) { setAnsweringId(null); setAnswerText(''); fetchOaqs(); }
   };
 
   const formatDate = d => new Date(d).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
@@ -195,7 +207,7 @@ function AdminPage() {
 
         {activeTab === 'reports' ? (
           reportsLoading ? (
-            <div className="admin-loader">Loading reports…</div>
+            <div className="admin-loader">Loading reportsΓÇª</div>
           ) : reports.length === 0 ? (
             <div className="admin-empty">No reports.</div>
           ) : (
@@ -226,7 +238,7 @@ function AdminPage() {
             </div>
           )
         ) : loading ? (
-          <div className="admin-loader">Loading…</div>
+          <div className="admin-loader">LoadingΓÇª</div>
         ) : oaqs.length === 0 ? (
           <div className="admin-empty">No {activeTab} questions.</div>
         ) : (
@@ -245,7 +257,7 @@ function AdminPage() {
                         onClick={() => handleAiSummarize(oaq._id)}
                         disabled={aiLoading === oaq._id}
                       >
-                        {aiLoading === oaq._id ? 'Analyzing…' : 'AI Summarize'}
+                        {aiLoading === oaq._id ? 'Analyzing...' : 'AI Summarize'}
                       </button>
                     )}
                     <button
@@ -253,7 +265,7 @@ function AdminPage() {
                       onClick={() => handleAiCheck(oaq._id)}
                       disabled={aiCheckLoading === oaq._id}
                     >
-                      {aiCheckLoading === oaq._id ? 'Checking…' : 'AI Check'}
+                      {aiCheckLoading === oaq._id ? 'Checking...' : 'AI Check'}
                     </button>
                   </div>
                   <div className="admin-card__actions">
@@ -304,6 +316,8 @@ function AdminPage() {
                               <span>by {ans.submittedBy?.name || 'Anonymous'}</span>
                               <span>{formatDate(ans.createdAt)}</span>
                               <span>{ans.upvotes}↑ {ans.downvotes}↓</span>
+                              {ans.verifiedByAdmin && <span className="admin-accepted-badge" style={{ color: '#059669' }}>✅ Verified by admin</span>}
+                              {ans.answeredByAdmin && <span className="admin-accepted-badge" style={{ color: '#6366f1' }}>✅ Answered by admin</span>}
                               {ans.accepted && <span className="admin-accepted-badge">✓ Accepted</span>}
                               <button className="admin-btn--text" onClick={() => handleAcceptAnswer(oaq._id, ans._id)}>
                                 {ans.accepted ? 'Unaccept' : 'Accept'}
@@ -317,6 +331,26 @@ function AdminPage() {
                   </div>
                 )}
 
+                {answeringId === oaq._id ? (
+                  <div className="admin-edit-form" style={{ marginTop: 12 }}>
+                    <textarea
+                      className="admin-edit-textarea"
+                      value={answerText}
+                      onChange={e => setAnswerText(e.target.value)}
+                      rows={3}
+                      placeholder="Write your answer as admin…"
+                    />
+                    <div className="admin-edit-actions">
+                      <button className="admin-btn admin-btn--approve" onClick={() => handleAdminAnswer(oaq._id)}>Submit Answer</button>
+                      <button className="admin-btn admin-btn--reject" onClick={() => { setAnsweringId(null); setAnswerText(''); }}>Cancel</button>
+                    </div>
+                  </div>
+                ) : (
+                  <button className="admin-btn--text" onClick={() => setAnsweringId(oaq._id)} style={{ marginTop: 8 }}>
+                    + Answer as Admin
+                  </button>
+                )}
+
                 {aiCheck[oaq._id]?.error && (
                   <div className="admin-ai-result" style={{ borderColor: 'var(--warning)', marginTop: 8 }}>
                     <div className="admin-ai-header">AI Check</div>
@@ -328,8 +362,8 @@ function AdminPage() {
                     <div className="admin-ai-header">AI Check</div>
                     <p className="admin-ai-text">
                       {aiCheck[oaq._id].relevant
-                        ? '✅ This question appears relevant to the internship.'
-                        : '🚩 This may be unrelated or spam.'}
+                        ? 'Γ£à This question appears relevant to the internship.'
+                        : '≡ƒÜ⌐ This may be unrelated or spam.'}
                     </p>
                     {aiCheck[oaq._id].reason && <p className="admin-ai-best">{aiCheck[oaq._id].reason}</p>}
                     {!aiCheck[oaq._id].relevant && (
@@ -351,7 +385,7 @@ function AdminPage() {
                         {aiResult[oaq._id].bestAnswerIndex >= 0 && (
                           <p className="admin-ai-best">
                             Best answer: <strong>#{aiResult[oaq._id].bestAnswerIndex + 1}</strong>
-                            {aiResult[oaq._id].reason && <span> — {aiResult[oaq._id].reason}</span>}
+                            {aiResult[oaq._id].reason && <span> ΓÇö {aiResult[oaq._id].reason}</span>}
                           </p>
                         )}
                       </>

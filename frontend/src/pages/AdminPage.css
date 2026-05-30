@@ -1,8 +1,11 @@
-.admin-page {
+﻿.admin-page {
   min-height: calc(100vh - 56px);
   padding: 40px 20px 60px;
   position: relative;
   z-index: 1;
+  background: var(--bg-secondary);
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  border-top: 3px solid #6366f1;
 }
 
 .admin-container {
@@ -16,14 +19,15 @@
 }
 
 .admin-title {
-  font-size: 1.8rem;
+  font-size: 2.2rem;
   font-weight: 800;
   color: var(--text-primary);
   margin-bottom: 6px;
+  letter-spacing: -0.02em;
 }
 
 .admin-subtitle {
-  font-size: 0.95rem;
+  font-size: 1.1rem;
   color: var(--text-muted);
 }
 
@@ -40,12 +44,12 @@
 
 .admin-tab {
   flex: 1;
-  padding: 9px;
+  padding: 12px 16px;
   border: none;
   background: none;
   border-radius: 7px;
   font-family: inherit;
-  font-size: 0.85rem;
+  font-size: 1rem;
   font-weight: 600;
   color: var(--text-muted);
   cursor: pointer;
@@ -62,7 +66,7 @@
   text-align: center;
   color: var(--text-light);
   padding: 40px;
-  font-size: 0.95rem;
+  font-size: 1.05rem;
 }
 
 /* ---- List ---- */
@@ -89,14 +93,14 @@
 
 .admin-card__votes {
   display: flex;
-  gap: 10px;
-  font-size: 0.8rem;
+  gap: 12px;
+  font-size: 0.88rem;
   font-weight: 600;
 }
 
 .admin-vote-count {
   color: var(--text-muted);
-  font-size: 0.85rem;
+  font-size: 0.9rem;
 }
 
 .admin-answer-count {
@@ -109,9 +113,9 @@
 }
 
 .admin-btn {
-  padding: 7px 14px;
+  padding: 8px 16px;
   border-radius: 8px;
-  font-size: 0.78rem;
+  font-size: 0.85rem;
   font-weight: 600;
   font-family: inherit;
   cursor: pointer;
@@ -130,23 +134,14 @@
 .admin-btn--promote { background: var(--accent-light); color: var(--accent); }
 .admin-btn--promote:hover:not(.disabled) { background: #e0e7ff; }
 .admin-btn--promote.disabled { opacity: 0.4; cursor: not-allowed; }
-.admin-btn--text { background: none; border: none; padding: 0; color: var(--accent); cursor: pointer; font-size: 0.78rem; font-weight: 600; }
-.admin-btn--text:hover { text-decoration: underline; }
-
-.admin-card__question {
-  font-size: 1rem;
-  font-weight: 600;
-  color: var(--text-primary);
-  margin-bottom: 4px;
-  line-height: 1.4;
-}
+.admin-btn--text { background: none; border: none; padding: 0; color: var(--accent); cursor: pointer; font-size: 0.85rem; font-weight: 600; }
 
 .admin-card__meta {
   display: flex;
-  gap: 12px;
-  font-size: 0.78rem;
+  gap: 14px;
+  font-size: 0.88rem;
   color: var(--text-light);
-  margin-bottom: 12px;
+  margin-bottom: 14px;
 }
 
 .admin-hint {
@@ -170,16 +165,16 @@
 }
 
 .admin-answer__body p {
-  font-size: 0.88rem;
+  font-size: 0.95rem;
   color: var(--text-secondary);
   line-height: 1.6;
-  margin-bottom: 4px;
+  margin-bottom: 6px;
 }
 
 .admin-answer__meta {
   display: flex;
-  gap: 10px;
-  font-size: 0.75rem;
+  gap: 12px;
+  font-size: 0.83rem;
   color: var(--text-light);
   align-items: center;
 }
@@ -192,10 +187,10 @@
 
 .admin-edit-textarea {
   width: 100%;
-  padding: 10px 12px;
+  padding: 12px 14px;
   border: 1.5px solid #e2e8f0;
   border-radius: 8px;
-  font-size: 0.88rem;
+  font-size: 0.95rem;
   font-family: inherit;
   resize: vertical;
   outline: none;
@@ -213,7 +208,25 @@
 .admin-accepted-badge {
   color: var(--success);
   font-weight: 700;
-  font-size: 0.75rem;
+  font-size: 0.83rem;
+}
+
+.admin-report-status {
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: 3px 10px;
+  border-radius: 4px;
+}
+
+.admin-report-type {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-muted);
+  background: var(--bg-muted);
+  padding: 3px 10px;
+  border-radius: 4px;
 }
 
 .admin-report-status {
@@ -264,7 +277,7 @@
   background: #1e293b;
   color: #a78bfa;
   border: 1.5px solid #6366f1;
-  font-size: 0.78rem;
+  font-size: 0.85rem;
 }
 
 .admin-btn--ai:hover:not(:disabled) {
@@ -281,7 +294,7 @@
   background: #1e293b;
   color: #34d399;
   border: 1.5px solid #10b981;
-  font-size: 0.78rem;
+  font-size: 0.85rem;
 }
 
 .admin-btn--ai-check:hover:not(:disabled) {
@@ -325,14 +338,14 @@
 
 .admin-ai-result {
   margin-top: 12px;
-  padding: 12px 14px;
+  padding: 14px 16px;
   background: #1e1b4b;
   border: 1px solid #6366f1;
   border-radius: 10px;
 }
 
 .admin-ai-header {
-  font-size: 0.75rem;
+  font-size: 0.8rem;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.5px;
@@ -341,20 +354,20 @@
 }
 
 .admin-ai-text {
-  font-size: 0.88rem;
+  font-size: 0.95rem;
   color: var(--text-primary);
   line-height: 1.5;
   margin: 0 0 8px;
 }
 
 .admin-ai-best {
-  font-size: 0.85rem;
+  font-size: 0.9rem;
   color: var(--text-secondary);
   margin: 0;
 }
 
 .admin-ai-error {
-  font-size: 0.85rem;
+  font-size: 0.9rem;
   color: var(--danger);
   margin: 0;
 }

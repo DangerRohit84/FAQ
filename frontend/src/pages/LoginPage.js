@@ -24,7 +24,11 @@ function LoginPage() {
       const data = await res.json();
       if (!res.ok) { setError(data.error); return; }
       login(data.token, data.user);
-      navigate('/dashboard');
+      if (data.user.role === 'admin') {
+        navigate('/admin');
+      } else {
+        navigate('/dashboard');
+      }
     } catch { setError('Connection error. Please try again.'); }
     finally { setSubmitting(false); }
   };

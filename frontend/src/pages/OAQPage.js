@@ -347,6 +347,8 @@ function OAQPage() {
                             <div className="oaq-answer__meta">
                               <span>{ans.submittedBy?.name || 'Anonymous'}</span>
                               <span>{formatDate(ans.createdAt)}</span>
+                              {ans.verifiedByAdmin && <span className="oaq-answer__accepted-badge">✅ Verified by admin</span>}
+                              {ans.answeredByAdmin && <span className="oaq-answer__accepted-badge" style={{ background: '#eef2ff', color: '#6366f1' }}>✅ Answered by admin</span>}
                               {ans.accepted && <span className="oaq-answer__accepted-badge">✓ Accepted</span>}
                               {user && (
                                 <button
@@ -383,7 +385,7 @@ function OAQPage() {
                         </div>
                       )}
 
-                      {oaq.status !== 'promoted' && oaq.status !== 'rejected' && (
+                      {oaq.status !== 'promoted' && oaq.status !== 'rejected' && oaq.status !== 'approved' && user?._id !== oaq.submittedBy?._id && (
                         <div className="oaq-answer-form">
                           <textarea
                             className="oaq-textarea oaq-textarea--sm"
@@ -396,6 +398,11 @@ function OAQPage() {
                             Post answer
                           </button>
                         </div>
+                      )}
+                      {(oaq.status === 'approved' || user?._id === oaq.submittedBy?._id) && (
+                        <p className="oaq-answers__empty" style={{ marginTop: 12 }}>
+                          {user?._id === oaq.submittedBy?._id ? 'You cannot answer your own question' : 'This question is closed for new answers'}
+                        </p>
                       )}
                     </div>
                   )}
