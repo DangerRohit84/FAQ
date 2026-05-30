@@ -74,10 +74,7 @@ function FAQPage() {
     return () => clearTimeout(searchTimer.current);
   }, [searchQuery]);
 
-  const displayedData = (searchResults ?? faqData).map(cat => ({
-    ...cat,
-    questions: [...cat.questions].sort((a, b) => (b.views || 0) - (a.views || 0)),
-  }));
+  const displayedData = searchResults ?? faqData;
   const isSearching = searchResults !== null;
 
   const toggleItem = useCallback((catIndex, qIndex) => {

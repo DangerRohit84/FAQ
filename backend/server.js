@@ -13,6 +13,11 @@ const { auth } = require('./middleware/auth');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
+
+/* ── FAQ cache (5 min TTL) ── */
+let faqCache = null;
+let faqCacheTime = 0;
+const FAQ_CACHE_TTL = 5 * 60 * 1000; // 5 minutes
 const MONGO_URI = process.env.MONGO_URI || 'mongodb://localhost:27017/faq-app';
 
 mongoose.connect(MONGO_URI)
@@ -28,10 +33,19 @@ app.use('/api/notifications', notificationRoutes);
 app.use('/api/reports', reportRoutes);
 app.use('/api/ai', aiRoutes);
 
-/* ── FAQ listing ── */
+/* ── FAQ listing (cached 5 min, sorted by views) ── */
 app.get('/api/faqs', async (req, res) => {
   try {
+    const now = Date.now();
+    if (faqCache && now - faqCacheTime < FAQ_CACHE_TTL) {
+      return res.json(faqCache);
+    }
     const faqs = await FAQ.find().lean();
+    for (const cat of faqs) {
+      cat.questions.sort((a, b) => (b.views || 0) - (a.views || 0));
+    }
+    faqCache = faqs;
+    faqCacheTime = now;
     res.json(faqs);
   } catch (err) {
     res.status(500).json({ error: err.message });
