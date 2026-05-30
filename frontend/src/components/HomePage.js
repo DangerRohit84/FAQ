@@ -102,7 +102,7 @@ function HomePage() {
     if (suggestTimer.current) clearTimeout(suggestTimer.current);
     if (!searchQuery.trim() || searchQuery.length < 2) { setSuggestions([]); return; }
     suggestTimer.current = setTimeout(() => {
-      fetch(`/api/search/suggest?q=${encodeURIComponent(searchQuery)}`)
+      fetch(`/api/suggestions/autocomplete?q=${encodeURIComponent(searchQuery)}`)
         .then(res => res.json())
         .then(setSuggestions)
         .catch(() => setSuggestions([]));
@@ -180,7 +180,7 @@ function HomePage() {
                 placeholder="Search questions, keywords, or topics...  (press / to focus)"
                 value={searchQuery}
                 onChange={e => setSearchQuery(e.target.value)}
-                onFocus={() => searchQuery.length >= 2 && fetch(`/api/search/suggest?q=${encodeURIComponent(searchQuery)}`).then(r => r.json()).then(setSuggestions).catch(() => {})}
+                onFocus={() => searchQuery.length >= 2 && fetch(`/api/suggestions/autocomplete?q=${encodeURIComponent(searchQuery)}`).then(r => r.json()).then(setSuggestions).catch(() => {})}
               />
               {micSupported && (
                 <button
@@ -211,9 +211,9 @@ function HomePage() {
             {suggestions.length > 0 && (
               <div className="home-suggestions">
                 {suggestions.map((s, i) => (
-                  <button key={i} className="home-suggestion" onClick={() => { setSearchQuery(s.text); setSuggestions([]); doSearch(s.text); }}>
-                    <span className="home-suggestion__badge">{s.type === 'FAQ' ? '📖' : '💬'}</span>
-                    <span>{s.text}</span>
+                  <button key={i} className="home-suggestion" onClick={() => { setSearchQuery(s.q); setSuggestions([]); doSearch(s.q); }}>
+                    <span className="home-suggestion__badge">{s.categoryIcon || '📖'}</span>
+                    <span>{s.q}</span>
                   </button>
                 ))}
               </div>
