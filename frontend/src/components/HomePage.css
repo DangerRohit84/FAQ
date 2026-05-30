@@ -84,32 +84,36 @@
 }
 
 .home-search {
-  display: flex;
+  position: relative;
   flex: 1;
-  align-items: center;
   background: #fff;
   border-radius: 14px;
-  padding: 0 18px;
   box-shadow: var(--shadow-lg);
   transition: background 0.3s, box-shadow 0.3s;
 }
 
 .home-search-icon {
+  position: absolute;
+  left: 18px;
+  top: 50%;
+  transform: translateY(-50%);
   width: 20px;
   height: 20px;
   color: var(--text-light);
-  flex-shrink: 0;
+  z-index: 2;
+  pointer-events: none;
 }
 
 .home-search-input {
-  flex: 1;
+  width: 100%;
   border: none;
-  padding: 16px 14px;
+  padding: 16px 110px 16px 52px;
   font-size: 1rem;
   font-family: inherit;
   background: transparent;
   outline: none;
   color: var(--text-secondary);
+  box-sizing: border-box;
 }
 
 .home-search-input::placeholder {
@@ -117,7 +121,10 @@
 }
 
 .home-search-clear {
-  flex-shrink: 0;
+  position: absolute;
+  right: 14px;
+  top: 50%;
+  transform: translateY(-50%);
   width: 32px;
   height: 32px;
   border: none;
@@ -129,6 +136,7 @@
   justify-content: center;
   color: var(--text-muted);
   transition: background 0.2s;
+  z-index: 2;
 }
 
 .home-search-clear:hover {
@@ -192,7 +200,10 @@
 }
 
 .home-search-mic {
-  flex-shrink: 0;
+  position: absolute;
+  right: 54px;
+  top: 50%;
+  transform: translateY(-50%);
   width: 32px;
   height: 32px;
   border: none;
@@ -204,6 +215,7 @@
   justify-content: center;
   color: var(--text-muted);
   transition: all 0.2s;
+  z-index: 2;
 }
 
 .home-search-mic:hover {

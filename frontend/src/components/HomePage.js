@@ -81,8 +81,8 @@ function HomePage() {
     const match = text => words.every(w => text.toLowerCase().includes(w));
 
     const combined = [];
-    if (homeData?.faqData) {
-      for (const cat of homeData.faqData) {
+    if (homeData?.categoryCards) {
+      for (const cat of homeData.categoryCards) {
         for (const item of (cat.questions || [])) {
           if (match(item.q) || match(item.a || '')) {
             combined.push({ ...item, _type: 'FAQ', _cat: cat.category, _icon: cat.icon, _catId: cat._id });

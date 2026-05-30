@@ -5,8 +5,8 @@
 /* ── Autocorrect dropdown ── */
 .autocorrect-wrapper {
   position: relative;
-  flex: 1;
-  display: flex;
+  width: 100%;
+  display: block;
 }
 
 .autocorrect-dropdown {
@@ -15,12 +15,12 @@
   left: 0;
   right: 0;
   z-index: 1000;
-  margin: 2px 0 0;
+  margin: 0;
   padding: 4px 0;
   list-style: none;
   background: var(--card-bg, #fff);
   border: 1px solid var(--border, #e5e7eb);
-  border-radius: 8px;
+  border-radius: 0 0 14px 14px;
   box-shadow: 0 6px 20px rgba(0,0,0,0.12);
   max-height: 240px;
   overflow-y: auto;
