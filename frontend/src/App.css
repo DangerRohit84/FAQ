@@ -14,32 +14,34 @@
   top: 100%;
   left: 0;
   right: 0;
-  z-index: 1000;
+  z-index: 9999;
   margin: 0;
   padding: 4px 0;
   list-style: none;
-  background: var(--card-bg, #fff);
-  border: 1px solid var(--border, #e5e7eb);
+  background: var(--bg-card);
+  border: 1px solid var(--border);
   border-radius: 0 0 14px 14px;
   box-shadow: 0 6px 20px rgba(0,0,0,0.12);
   max-height: 240px;
   overflow-y: auto;
+  text-align: left;
 }
 
 .autocorrect-item {
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 8px 14px;
+  padding: 8px 52px;
   cursor: pointer;
   font-size: 0.875rem;
-  color: var(--text, #1f2937);
+  color: var(--text-primary);
   transition: background 0.12s;
+  text-align: left;
 }
 
 .autocorrect-item:hover,
 .autocorrect-item--active {
-  background: var(--hover-bg, #f3f4f6);
+  background: var(--bg-muted);
 }
 
 .autocorrect-type {

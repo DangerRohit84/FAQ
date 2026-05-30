@@ -2,7 +2,6 @@
   position: relative;
   min-height: 100vh;
   padding: 48px 20px 60px;
-  overflow: hidden;
 }
 
 .faq-gradient {
@@ -66,6 +65,10 @@
   animation: fadeSlideIn 0.5s ease both;
 }
 
+[data-theme="dark"] .faq-badge {
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.2), rgba(99, 102, 241, 0.1));
+}
+
 .faq-title {
   font-size: 2.8rem;
   font-weight: 800;
@@ -110,11 +113,14 @@
   margin-bottom: 40px;
   animation: fadeSlideIn 0.5s 0.3s ease both;
   display: flex;
+  flex-direction: row-reverse;
   gap: 10px;
   align-items: stretch;
   max-width: 760px;
   margin-left: auto;
   margin-right: auto;
+  position: relative;
+  z-index: 10;
 }
 
 .faq-search {
@@ -186,6 +192,22 @@
   border-color: #818cf8;
   background: var(--bg-card);
   box-shadow: 0 4px 24px rgba(99, 102, 241, 0.12);
+}
+
+[data-theme="dark"] .faq-search-input {
+  background: var(--bg-card);
+  color: var(--text-primary);
+  border-color: rgba(255, 255, 255, 0.08);
+}
+
+[data-theme="dark"] .faq-search-input::placeholder {
+  color: var(--text-muted);
+}
+
+[data-theme="dark"] .faq-search-input:focus {
+  border-color: #818cf8;
+  background: var(--bg-card-hover);
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
 }
 
 .faq-search-clear {
@@ -302,6 +324,13 @@
   animation: shimmer 1.5s 0.2s infinite;
 }
 
+[data-theme="dark"] .faq-loader__bar,
+[data-theme="dark"] .faq-loader__header,
+[data-theme="dark"] .faq-loader__item {
+  background: linear-gradient(90deg, #1a2332 25%, #243044 50%, #1a2332 75%);
+  background-size: 200% 100%;
+}
+
 /* ---- Empty state ---- */
 
 .faq-empty {
@@ -393,6 +422,10 @@
   border-color: #cbd5e1;
   box-shadow: var(--shadow-lg);
   transform: translateY(-2px);
+}
+
+[data-theme="dark"] .faq-category-card:hover {
+  border-color: var(--border-hover);
 }
 
 /* ---- Card header ---- */
@@ -525,6 +558,12 @@
 
 /* ---- Responsive ---- */
 
+@media (max-width: 768px) {
+  .faq-header {
+    margin-bottom: 28px;
+  }
+}
+
 @media (max-width: 640px) {
   .faq-title {
     font-size: 2rem;
@@ -543,7 +582,30 @@
     padding: 8px;
   }
   .faq-search-input {
-    padding: 16px 44px 16px 48px;
+    padding: 14px 44px 14px 48px;
     font-size: 0.95rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .faq-title {
+    font-size: 1.6rem;
+  }
+  .faq-search-icon {
+    left: 16px;
+  }
+  .faq-search-input {
+    padding: 12px 40px 12px 42px;
+    font-size: 0.9rem;
+  }
+  .faq-search-clear {
+    right: 10px;
+    width: 30px;
+    height: 30px;
+  }
+  .faq-search-mic {
+    right: 46px;
+    width: 30px;
+    height: 30px;
   }
 }

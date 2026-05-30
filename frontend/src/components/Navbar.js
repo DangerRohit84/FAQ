@@ -1,5 +1,5 @@
-import React from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import React, { useState } from 'react';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import ThemeToggle from './ThemeToggle';
 import NotificationBell from './NotificationBell';
@@ -9,6 +9,11 @@ function Navbar() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
+  const [menuOpen, setMenuOpen] = useState(false);
+
+  const toggleMenu = () => setMenuOpen(p => !p);
+  const closeMenu = () => setMenuOpen(false);
+
   const isAuthPage = location.pathname === '/';
 
   if (isAuthPage && !user) {
@@ -31,7 +36,6 @@ function Navbar() {
   return (
     <nav className="navbar">
       <div className="navbar-inner">
-        {/* Brand Logo */}
         <Link to="/" className="navbar-brand" onClick={closeMenu}>
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="navbar-logo">
             <circle cx="12" cy="12" r="10" />
@@ -40,18 +44,20 @@ function Navbar() {
           </svg>
           <span>FAQ Portal</span>
         </Link>
-        <div className="navbar-links">
-          <Link to="/" className="navbar-link">Home</Link>
-          <Link to="/faq" className="navbar-link">FAQ</Link>
+
+        <div className={`navbar-links${menuOpen ? ' active' : ''}`}>
+          <Link to="/" className="navbar-link" onClick={closeMenu}>Home</Link>
+          <Link to="/faq" className="navbar-link" onClick={closeMenu}>FAQ</Link>
           {(!user || user.role !== 'admin') && (
             <>
-              <Link to="/community" className="navbar-link">Community</Link>
-              <Link to="/leaderboard" className="navbar-link">Leaderboard</Link>
+              <Link to="/community" className="navbar-link" onClick={closeMenu}>Community</Link>
+              <Link to="/leaderboard" className="navbar-link" onClick={closeMenu}>Leaderboard</Link>
             </>
           )}
           {user ? (
             <>
-              {user.role !== 'admin' && <Link to="/dashboard" className="navbar-link">Dashboard</Link>}
+              {user.role !== 'admin' && <Link to="/dashboard" className="navbar-link" onClick={closeMenu}>Dashboard</Link>}
+              {user.role === 'admin' && <Link to="/admin" className="navbar-link" onClick={closeMenu}>Admin</Link>}
               <span className={`navbar-role navbar-role--${user.role}`}>{user.role}</span>
               <button className="navbar-btn" onClick={() => { logout(); navigate('/'); }}>Sign out</button>
             </>
@@ -63,18 +69,13 @@ function Navbar() {
           )}
         </div>
 
-        {/* Persistent Utilities & Hamburger Controls */}
         <div className="navbar-right">
+          <button className={`hamburger${menuOpen ? ' open' : ''}`} onClick={toggleMenu} aria-label="Toggle menu">
+            <div className="bar" /><div className="bar" /><div className="bar" />
+          </button>
           <NotificationBell />
           <div className="navbar-lamp">
             <ThemeToggle />
-          </div>
-          
-          {/* Hamburger Icon Element (Displays to the right of indicators on mobile views) */}
-          <div className="hamburger" onClick={toggleMenu}>
-            <div className={`bar ${isOpen ? 'open' : ''}`}></div>
-            <div className={`bar ${isOpen ? 'open' : ''}`}></div>
-            <div className={`bar ${isOpen ? 'open' : ''}`}></div>
           </div>
         </div>
       </div>

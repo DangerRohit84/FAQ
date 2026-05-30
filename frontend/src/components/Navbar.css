@@ -143,80 +143,80 @@
   transform-origin: top center;
 }
 
-/* Hidden by default on ultra-wide screens */
+/* ── Hamburger ── */
 .hamburger {
   display: none;
-  cursor: pointer;
   flex-direction: column;
+  justify-content: center;
+  align-items: center;
   gap: 5px;
-  margin-left: 1rem; /* Positions the toggle nicely to the right of your utilities */
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 8px;
+  border-radius: 8px;
+  transition: background 0.2s;
+}
+
+.hamburger:hover {
+  background: var(--bg-muted);
 }
 
 .bar {
   width: 22px;
   height: 2.5px;
-  background-color: var(--text-primary); /* Syncs with theme mode variations automatically */
+  background: var(--text-primary);
   border-radius: 2px;
-  transition: all 0.3s ease-in-out;
+  transition: all 0.3s;
 }
 
+.hamburger.open .bar:nth-child(1) {
+  transform: translateY(7.5px) rotate(45deg);
+}
 
-/* ==========================================
-   2. Desktop Responsive PC Media Breakpoint (< 1080px)
-   ========================================== */
-@media screen and (max-width: 1080px) {
-  
-  /* Expose the hamburger container icon block */
+.hamburger.open .bar:nth-child(2) {
+  opacity: 0;
+}
+
+.hamburger.open .bar:nth-child(3) {
+  transform: translateY(-7.5px) rotate(-45deg);
+}
+
+/* ── Mobile ── */
+@media (max-width: 768px) {
   .hamburger {
     display: flex;
   }
 
-  /* Morphing cross bar (X) animations when open toggle applies */
-  .bar.open:nth-child(1) {
-    transform: translateY(7.5px) rotate(45deg);
-  }
-  
-  .bar.open:nth-child(2) {
-    opacity: 0;
-    transform: translateX(-10px);
-  }
-  
-  .bar.open:nth-child(3) {
-    transform: translateY(-7.5px) rotate(-45deg);
-  }
-
-  /* Structural Shift: Transform row to a clean dropdown panel sheet */
   .navbar-links {
-    display: none; /* Keeps hidden by default */
-    flex-direction: column;
-    align-items: stretch;
     position: absolute;
-    top: 100%; /* Drops cleanly down right underneath the 56px border frame line */
+    top: 100%;
     left: 0;
-    width: 100%;
-    background: var(--navbar-bg); 
-    padding: 1.5rem 20px;
-    gap: 1rem;
-    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
-    border-top: 1px solid var(--navbar-border);
-    box-sizing: border-box;
+    right: 0;
+    background: var(--navbar-bg);
+    border-bottom: 1px solid var(--navbar-border);
+    flex-direction: column;
+    padding: 12px 20px;
+    gap: 2px;
+    display: none;
+    box-shadow: var(--shadow-lg);
   }
 
-  /* Reveals the vertical layout stack container cleanly when state is active */
   .navbar-links.active {
     display: flex;
   }
 
-  /* Readability fixes for dropdown links inside vertical context */
-  .navbar-link, .navbar-btn {
+  .navbar-link,
+  .navbar-btn {
     width: 100%;
     text-align: left;
-    padding: 10px 14px;
-    box-sizing: border-box;
+    padding: 12px 14px;
+    font-size: 0.95rem;
   }
 
   .navbar-btn--primary {
     text-align: center;
-    margin-top: 0.5rem;
+    margin-top: 4px;
   }
 }
+
