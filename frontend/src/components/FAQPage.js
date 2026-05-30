@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import FAQItem from './FAQItem';
 import AutocorrectInput from './AutocorrectInput';
@@ -7,12 +7,10 @@ import './FAQPage.css';
 function FAQPage() {
   const navigate = useNavigate();
   const [faqData, setFaqData] = useState([]);
-  const [searchResults, setSearchResults] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [loading, setLoading] = useState(true);
   const [listening, setListening] = useState(false);
   const [openItems, setOpenItems] = useState({});
-  const searchTimer = useRef(null);
   const gridRef = useRef(null);
   const recognitionRef = useRef(null);
   const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -56,27 +54,24 @@ function FAQPage() {
       .catch(() => setLoading(false));
   }, []);
 
-  useEffect(() => {
-    if (searchTimer.current) clearTimeout(searchTimer.current);
+  const displayedData = useMemo(() => {
+    const q = searchQuery.trim().toLowerCase();
+    if (!q || q.length < 2) return faqData;
+    const words = q.split(/\s+/).filter(Boolean);
+    return faqData
+      .map(cat => ({
+        ...cat,
+        questions: cat.questions.filter(item =>
+          words.every(w =>
+            item.q.toLowerCase().includes(w) ||
+            (item.a && item.a.toLowerCase().includes(w))
+          )
+        ),
+      }))
+      .filter(cat => cat.questions.length > 0);
+  }, [faqData, searchQuery]);
 
-    const q = searchQuery.trim();
-    if (!q) {
-      setSearchResults(null);
-      return;
-    }
-
-    searchTimer.current = setTimeout(() => {
-      fetch(`/api/faqs/search?q=${encodeURIComponent(q)}`)
-        .then(res => res.json())
-        .then(setSearchResults)
-        .catch(() => setSearchResults([]));
-    }, 300);
-
-    return () => clearTimeout(searchTimer.current);
-  }, [searchQuery]);
-
-  const displayedData = searchResults ?? faqData;
-  const isSearching = searchResults !== null;
+  const isSearching = searchQuery.trim().length >= 2;
 
   const toggleItem = useCallback((catIndex, qIndex) => {
     setOpenItems(prev => ({
@@ -86,20 +81,12 @@ function FAQPage() {
   }, []);
 
   const handleView = useCallback((catIdx, qIdx) => {
-    if (searchResults !== null) {
-      setSearchResults(prev => prev ? prev.map((cat, i) =>
-        i === catIdx ? { ...cat, questions: cat.questions.map((q, j) =>
-          j === qIdx ? { ...q, views: (q.views || 0) + 1 } : q
-        ) } : cat
-      ) : prev);
-    } else {
-      setFaqData(prev => prev.map((cat, i) =>
-        i === catIdx ? { ...cat, questions: cat.questions.map((q, j) =>
-          j === qIdx ? { ...q, views: (q.views || 0) + 1 } : q
-        ) } : cat
-      ));
-    }
-  }, [searchResults]);
+    setFaqData(prev => prev.map((cat, i) =>
+      i === catIdx ? { ...cat, questions: cat.questions.map((q, j) =>
+        j === qIdx ? { ...q, views: (q.views || 0) + 1 } : q
+      ) } : cat
+    ));
+  }, []);
 
   if (loading) {
     return (

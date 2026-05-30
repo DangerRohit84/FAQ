@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import AutocorrectInput from './AutocorrectInput';
 import { useNavigate } from 'react-router-dom';
 import FAQItem from './FAQItem';
@@ -7,16 +7,15 @@ import './HomePage.css';
 function HomePage() {
   const navigate = useNavigate();
   const [homeData, setHomeData] = useState(null);
+  const [allOaqs, setAllOaqs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
-  const [searchResults, setSearchResults] = useState(null);
   const [openItems, setOpenItems] = useState({});
   const [activeTab, setActiveTab] = useState('all');
   const [listening, setListening] = useState(false);
   const [selectedCat, setSelectedCat] = useState(null);
   const [flipping, setFlipping] = useState(null);
   const [catOpenItems, setCatOpenItems] = useState({});
-  const searchTimer = useRef(null);
   const searchInputRef = useRef(null);
   const gridRef = useRef(null);
   const recognitionRef = useRef(null);
@@ -39,7 +38,6 @@ function HomePage() {
       const text = e.results[0][0].transcript;
       setSearchQuery(text);
       setListening(false);
-      doSearch(text);
     };
     rec.onerror = () => setListening(false);
     rec.onend = () => setListening(false);
@@ -53,10 +51,14 @@ function HomePage() {
   }, []);
 
   useEffect(() => {
-    fetch('/api/home')
-      .then(res => res.json())
-      .then(data => { setHomeData(data); setLoading(false); })
-      .catch(() => setLoading(false));
+    Promise.all([
+      fetch('/api/home').then(r => r.json()),
+      fetch('/api/oaq?status=all').then(r => r.json()).catch(() => []),
+    ]).then(([home, oaqs]) => {
+      setHomeData(home);
+      setAllOaqs(oaqs);
+      setLoading(false);
+    }).catch(() => setLoading(false));
   }, []);
 
   /* ── / hotkey to focus search ── */
@@ -71,45 +73,38 @@ function HomePage() {
     return () => window.removeEventListener('keydown', handler);
   }, []);
 
-  const doSearch = useCallback((q) => {
-    if (!q.trim()) { setSearchResults(null); return; }
-    fetch(`/api/search/all?q=${encodeURIComponent(q)}`)
-      .then(res => res.json())
-      .then(data => {
-        const combined = [];
-        for (const cat of (data.faq || [])) {
-          for (const item of cat.questions) {
+  /* ── Runtime search (instant, no server round-trip) ── */
+  const searchResults = useMemo(() => {
+    const q = searchQuery.trim().toLowerCase();
+    if (!q || q.length < 2) return null;
+    const words = q.split(/\s+/).filter(Boolean);
+    const match = text => words.every(w => text.toLowerCase().includes(w));
+
+    const combined = [];
+    if (homeData?.faqData) {
+      for (const cat of homeData.faqData) {
+        for (const item of (cat.questions || [])) {
+          if (match(item.q) || match(item.a || '')) {
             combined.push({ ...item, _type: 'FAQ', _cat: cat.category, _icon: cat.icon, _catId: cat._id });
           }
         }
-        for (const item of (data.oaq || [])) {
-          combined.push({ ...item, _type: 'OAQ' });
-        }
-        setSearchResults(combined);
-      })
-      .catch(() => setSearchResults([]));
-  }, []);
-
-  useEffect(() => {
-    if (searchTimer.current) clearTimeout(searchTimer.current);
-    searchTimer.current = setTimeout(() => doSearch(searchQuery), 300);
-    return () => clearTimeout(searchTimer.current);
-  }, [searchQuery, doSearch]);
+      }
+    }
+    for (const item of allOaqs) {
+      if (match(item.question)) {
+        combined.push({ ...item, _type: 'OAQ' });
+      }
+    }
+    return combined;
+  }, [searchQuery, homeData, allOaqs]);
 
   const toggleItem = useCallback((idx) => {
     setOpenItems(prev => ({ ...prev, [idx]: prev[idx] === undefined ? 0 : prev[idx] === 0 ? null : 0 }));
   }, []);
 
   const handleView = useCallback((catId, qId) => {
-    const idx = (searchResults || []).findIndex(
-      i => i._type === 'FAQ' && i._catId === catId && i._id === qId
-    );
-    if (idx >= 0) {
-      setSearchResults(prev => prev.map((item, i) =>
-        i === idx ? { ...item, views: (item.views || 0) + 1 } : item
-      ));
-    }
-  }, [searchResults]);
+    setOpenItems(prev => ({ ...prev, [catId + '-' + qId]: true }));
+  }, []);
 
   const quickFilters = [
     { key: 'all', label: 'All' },
@@ -181,7 +176,7 @@ function HomePage() {
                 </button>
               )}
               {searchQuery && (
-                <button className="home-search-clear" onClick={() => { setSearchQuery(''); setSearchResults(null); }}>
+                <button className="home-search-clear" onClick={() => { setSearchQuery(''); }}>
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 6 6 18M6 6l12 12" /></svg>
                 </button>
               )}
@@ -214,7 +209,7 @@ function HomePage() {
           <div className="home-results">
             <div className="home-results-header">
               <span className="home-results-count">{searchResults.length} result{searchResults.length !== 1 ? 's' : ''}</span>
-              <button className="home-results-clear" onClick={() => { setSearchQuery(''); setSearchResults(null); }}>Clear</button>
+              <button className="home-results-clear" onClick={() => { setSearchQuery(''); }}>Clear</button>
             </div>
             {searchResults.length === 0 ? (
               <div className="home-results-empty">
