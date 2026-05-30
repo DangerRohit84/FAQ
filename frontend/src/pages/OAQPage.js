@@ -352,22 +352,6 @@ function OAQPage() {
                         </div>
                       ))}
 
-                      {/* Related questions */}
-                      {related && (
-                        <div className="oaq-related">
-
-                          {related.faq?.length > 0 && related.faq.map(cat => cat.questions.map((item, i) => (
-                            <div key={i} className="oaq-related-item" onClick={() => navigate('/faq')}>
-                              📖 {item.q}
-                            </div>
-                          )))}
-                          {related.oaq?.length > 0 && related.oaq.map(o => (
-                            <div key={o._id} className="oaq-related-item" onClick={() => { setExpandedId(o._id); fetchRelated(o.question); }}>
-                              💬 {o.question}
-                            </div>
-                          ))}
-                        </div>
-                      )}
 
                       {oaq.status !== 'promoted' && oaq.status !== 'rejected' && oaq.status !== 'approved' && user?._id !== oaq.submittedBy?._id && (
                         <div className="oaq-answer-form">
