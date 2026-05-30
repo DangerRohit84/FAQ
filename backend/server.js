@@ -49,11 +49,12 @@ app.get('/api/faqs/search', async (req, res) => {
     const escaped = query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
     const fuzzy = query.length >= 3 ? escaped.split('').join('.*') : escaped;
     const regex = new RegExp(fuzzy, 'i');
+    const wordMatch = text => text.split(/\s+/).some(w => regex.test(w));
 
     const results = faqs.map(cat => ({
       ...cat,
       questions: cat.questions
-        .filter(item => regex.test(item.q) || regex.test(item.a))
+        .filter(item => wordMatch(item.q) || wordMatch(item.a))
         .map(item => ({
           ...item,
           _relevance:
@@ -91,6 +92,7 @@ app.get('/api/search/all', async (req, res) => {
     const escaped = query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
     const fuzzy = query.length >= 3 ? escaped.split('').join('.*') : escaped;
     const regex = new RegExp(fuzzy, 'i');
+    const wordMatch = text => text.split(/\s+/).some(w => regex.test(w));
 
     const [faqResults, oaqResults] = await Promise.all([
       FAQ.find({ $or: [{ 'questions.q': { $regex: regex } }, { 'questions.a': { $regex: regex } }] }).lean(),
@@ -102,7 +104,7 @@ app.get('/api/search/all', async (req, res) => {
     const faq = faqResults.map(cat => ({
       ...cat,
       questions: cat.questions
-        .filter(item => regex.test(item.q) || regex.test(item.a))
+        .filter(item => wordMatch(item.q) || wordMatch(item.a))
         .map(item => ({
           ...item,
           _relevance:
