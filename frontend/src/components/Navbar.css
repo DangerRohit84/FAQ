@@ -32,6 +32,27 @@
   text-decoration: none;
 }
 
+.navbar-brand-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.navbar-brand-home {
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-decoration: none;
+  padding: 6px 12px;
+  border-radius: 6px;
+  transition: all 0.2s;
+}
+
+.navbar-brand-home:hover {
+  color: var(--text-primary);
+  background: var(--bg-muted);
+}
+
 .navbar-logo {
   width: 24px;
   height: 24px;

@@ -6,7 +6,7 @@
 .home-gradient {
   position: absolute;
   inset: 0 0 auto;
-  height: 350px;
+  height: 440px;
   background: linear-gradient(135deg, #1e3a5f 0%, #2563eb 60%, #3b82f6 100%);
   border-radius: 0 0 30px 30px;
   z-index: 0;
@@ -228,6 +228,37 @@
 }
 
 /* ── Quick filters ── */
+.home-subnav {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 12px 0 4px;
+  flex-wrap: wrap;
+}
+
+.home-subnav-link {
+  padding: 8px 20px;
+  border-radius: 8px;
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-decoration: none;
+  transition: all 0.2s;
+}
+
+.home-subnav-link:hover {
+  background: var(--bg-muted);
+  color: var(--text-primary);
+}
+
+.home-subnav-signout {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-family: inherit;
+}
+
 .home-quick-filters {
   display: flex;
   align-items: center;
@@ -241,6 +272,7 @@
   font-size: 0.85rem;
   opacity: 0.8;
   margin-right: 4px;
+  color: rgba(255,255,255,0.9);
 }
 
 .home-filter-pill {

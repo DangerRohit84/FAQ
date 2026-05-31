@@ -313,9 +313,11 @@ function AdminPage() {
                               {ans.verifiedByAdmin && <span className="admin-accepted-badge" style={{ color: '#059669' }}>✅ Verified by admin</span>}
                               {ans.answeredByAdmin && <span className="admin-accepted-badge" style={{ color: '#6366f1' }}>✅ Answered by admin</span>}
                               {ans.accepted && <span className="admin-accepted-badge">✓ Accepted</span>}
-                              <button className="admin-btn--text" onClick={() => handleAcceptAnswer(oaq._id, ans._id)}>
-                                {ans.accepted ? 'Unaccept' : 'Accept'}
-                              </button>
+                              {!oaq.answers.some(a => a.answeredByAdmin) && (
+                                <button className="admin-btn--text" onClick={() => handleAcceptAnswer(oaq._id, ans._id)}>
+                                  {ans.accepted ? 'Unaccept' : 'Accept'}
+                                </button>
+                              )}
                               <button className="admin-btn--text" onClick={() => { setEditAnswer(ans._id); setEditText(ans.text); }}>Edit</button>
                             </div>
                           </div>
@@ -325,7 +327,7 @@ function AdminPage() {
                   </div>
                 )}
 
-                {answeringId === oaq._id ? (
+                {oaq.status === 'open' && answeringId === oaq._id ? (
                   <div className="admin-edit-form" style={{ marginTop: 12 }}>
                     <textarea
                       className="admin-edit-textarea"
@@ -339,11 +341,11 @@ function AdminPage() {
                       <button className="admin-btn admin-btn--reject" onClick={() => { setAnsweringId(null); setAnswerText(''); }}>Cancel</button>
                     </div>
                   </div>
-                ) : (
+                ) : oaq.status === 'open' ? (
                   <button className="admin-btn--text" onClick={() => setAnsweringId(oaq._id)} style={{ marginTop: 8 }}>
                     + Answer as Admin
                   </button>
-                )}
+                ) : null}
 
                 {aiCheck[oaq._id]?.error && (
                   <div className="admin-ai-result" style={{ borderColor: 'var(--warning)', marginTop: 8 }}>

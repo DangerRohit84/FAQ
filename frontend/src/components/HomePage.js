@@ -1,10 +1,12 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import AutocorrectInput from './AutocorrectInput';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 import FAQItem from './FAQItem';
 import './HomePage.css';
 
 function HomePage() {
+  const { user, logout } = useAuth();
   const navigate = useNavigate();
   const [homeData, setHomeData] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -148,6 +150,14 @@ function HomePage() {
       <div className="home-gradient" />
 
       <div className="home-container">
+        <nav className="home-subnav">
+          <Link to="/faq" className="home-subnav-link">FAQ</Link>
+          <Link to="/community" className="home-subnav-link">Community</Link>
+          <Link to="/leaderboard" className="home-subnav-link">Leaderboard</Link>
+          <Link to="/dashboard" className="home-subnav-link">Dashboard</Link>
+          {user && <button className="home-subnav-link home-subnav-signout" onClick={() => { logout(); navigate('/'); }}>Sign out</button>}
+        </nav>
+
         {/* Hero / Search */}
         <div className="home-hero">
           <span className="home-badge">Vicharanashala Help Center</span>

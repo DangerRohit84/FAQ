@@ -34,29 +34,27 @@ function Navbar() {
   return (
     <nav className="navbar">
       <div className="navbar-inner">
-        {/* Brand Logo */}
-        <Link to="/" className="navbar-brand" onClick={closeMenu}>
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="navbar-logo">
-            <circle cx="12" cy="12" r="10" />
-            <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" />
-            <path d="M12 17h.01" />
-          </svg>
-          <span>FAQ Portal</span>
-        </Link>
+        <div className="navbar-brand-wrapper">
+          <Link to="/" className="navbar-brand" onClick={closeMenu}>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="navbar-logo">
+              <circle cx="12" cy="12" r="10" />
+              <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" />
+              <path d="M12 17h.01" />
+            </svg>
+            <span>FAQ Portal</span>
+          </Link>
+          <Link to="/" className="navbar-brand-home" onClick={closeMenu}>Home</Link>
+        </div>
         <div className="navbar-links">
-          <Link to="/" className="navbar-link">Home</Link>
-          <Link to="/faq" className="navbar-link">FAQ</Link>
-          {(!user || user.role !== 'admin') && (
+          {user?.role === 'admin' && (
             <>
-              <Link to="/community" className="navbar-link">Community</Link>
-              <Link to="/leaderboard" className="navbar-link">Leaderboard</Link>
+              <Link to="/faq" className="navbar-link">FAQ</Link>
+              <Link to="/admin" className="navbar-link">Admin</Link>
             </>
           )}
           {user ? (
             <>
-              {user.role !== 'admin' && <Link to="/dashboard" className="navbar-link">Dashboard</Link>}
-              <span className={`navbar-role navbar-role--${user.role}`}>{user.role}</span>
-              <button className="navbar-btn" onClick={() => { logout(); navigate('/'); }}>Sign out</button>
+              {user.role === 'admin' && <button className="navbar-btn" onClick={() => { logout(); navigate('/'); }}>Sign out</button>}
             </>
           ) : (
             <>
@@ -68,6 +66,7 @@ function Navbar() {
 
         {/* Persistent Utilities & Hamburger Controls */}
         <div className="navbar-right">
+          {user && <span className={`navbar-role navbar-role--${user.role}`}>{user.role}</span>}
           <NotificationBell />
           <div className="navbar-lamp">
             <ThemeToggle />

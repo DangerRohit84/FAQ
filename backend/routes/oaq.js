@@ -150,7 +150,7 @@ router.post('/:id/answers', auth, async (req, res) => {
     if (oaq.status === 'promoted' || oaq.status === 'rejected') {
       return res.status(400).json({ error: 'Cannot answer a promoted or rejected question' });
     }
-    if (oaq.status === 'approved' && req.user.role !== 'admin') {
+    if (oaq.status === 'approved') {
       return res.status(400).json({ error: 'This question is closed for new answers' });
     }
     if (oaq.submittedBy.toString() === req.user._id.toString()) {
@@ -398,6 +398,9 @@ router.put('/:id/answers/:answerId/accept', auth, admin, async (req, res) => {
   try {
     const oaq = await OAQ.findById(req.params.id);
     if (!oaq) return res.status(404).json({ error: 'Not found' });
+
+    const hasAdminAnswer = oaq.answers.some(a => a.answeredByAdmin);
+    if (hasAdminAnswer) return res.status(400).json({ error: 'Cannot accept answers after admin has answered' });
 
     const answer = oaq.answers.id(req.params.answerId);
     if (!answer) return res.status(404).json({ error: 'Answer not found' });
