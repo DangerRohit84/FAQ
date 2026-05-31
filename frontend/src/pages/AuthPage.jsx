@@ -16,7 +16,7 @@ function AuthPage() {
 
   if (user) {
     if (user.role === 'admin') return <Navigate to="/admin" replace />;
-    return <Navigate to="/dashboard" replace />;
+    return <Navigate to="/faq" replace />;
   }
 
   const clearForm = () => {
@@ -46,11 +46,11 @@ function AuthPage() {
         setError('This account is not a student. Use the Admin section.');
         return;
       }
-      login(data.token, data.user);
+      login(data.user);
       if (data.user.role === 'admin') {
         navigate('/admin');
       } else {
-        navigate('/dashboard');
+        navigate('/faq');
       }
     } catch { setError('Connection error. Please try again.'); }
     finally { setSubmitting(false); }
@@ -68,8 +68,8 @@ function AuthPage() {
       });
       const data = await res.json();
       if (!res.ok) { setError(data.error); return; }
-      login(data.token, data.user);
-      navigate('/dashboard');
+      login(data.user);
+      navigate('/faq');
     } catch { setError('Connection error. Please try again.'); }
     finally { setSubmitting(false); }
   };

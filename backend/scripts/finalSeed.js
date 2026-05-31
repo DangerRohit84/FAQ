@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
-const FAQ = require('./models/FAQ'); // Double check if your FAQ model path is correct
+require('dotenv').config();
+const FAQ = require('../models/FAQ');
 
 // PASTE YOUR ENTIRE 1K+ LINE DATASET ARRAY HERE
 const myBigDataset = [

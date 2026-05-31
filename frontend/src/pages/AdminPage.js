@@ -201,7 +201,7 @@ function AdminPage() {
 
         {activeTab === 'reports' ? (
           reportsLoading ? (
-            <div className="admin-loader">Loading reportsΓÇª</div>
+            <div className="admin-loader">Loading reports...</div>
           ) : reports.length === 0 ? (
             <div className="admin-empty">No reports.</div>
           ) : (
@@ -232,7 +232,7 @@ function AdminPage() {
             </div>
           )
         ) : loading ? (
-          <div className="admin-loader">LoadingΓÇª</div>
+          <div className="admin-loader">Loading...</div>
         ) : oaqs.length === 0 ? (
           <div className="admin-empty">No {activeTab} questions.</div>
         ) : (
@@ -356,8 +356,8 @@ function AdminPage() {
                     <div className="admin-ai-header">AI Check</div>
                     <p className="admin-ai-text">
                       {aiCheck[oaq._id].relevant
-                        ? 'Γ£à This question appears relevant to the internship.'
-                        : '≡ƒÜ⌐ This may be unrelated or spam.'}
+                        ? 'This question appears relevant to the internship.'
+                        : 'This may be unrelated or spam.'}
                     </p>
                     {aiCheck[oaq._id].reason && <p className="admin-ai-best">{aiCheck[oaq._id].reason}</p>}
                     {!aiCheck[oaq._id].relevant && (
@@ -379,7 +379,7 @@ function AdminPage() {
                         {aiResult[oaq._id].bestAnswerIndex >= 0 && (
                           <p className="admin-ai-best">
                             Best answer: <strong>#{aiResult[oaq._id].bestAnswerIndex + 1}</strong>
-                            {aiResult[oaq._id].reason && <span> ΓÇö {aiResult[oaq._id].reason}</span>}
+                            {aiResult[oaq._id].reason && <span> - {aiResult[oaq._id].reason}</span>}
                           </p>
                         )}
                       </>

@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+require('dotenv').config();
 const FAQ = require('../models/FAQ');
 
 const seedData = [

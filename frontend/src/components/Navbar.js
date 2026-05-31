@@ -1,5 +1,5 @@
-import React from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import React, { useState } from 'react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import ThemeToggle from './ThemeToggle';
 import NotificationBell from './NotificationBell';
@@ -9,7 +9,11 @@ function Navbar() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
+  const [isOpen, setIsOpen] = useState(false);
   const isAuthPage = location.pathname === '/';
+
+  const toggleMenu = () => setIsOpen(prev => !prev);
+  const closeMenu = () => setIsOpen(false);
 
   if (isAuthPage && !user) {
     return (
@@ -40,20 +44,20 @@ function Navbar() {
           </svg>
           <span>FAQ Portal</span>
         </Link>
-        <div className="navbar-links">
-          <Link to="/" className="navbar-link">Home</Link>
-          <Link to="/faq" className="navbar-link">FAQ</Link>
+        <div className={`navbar-links ${isOpen ? 'active' : ''}`}>
+          <Link to="/" className="navbar-link" onClick={closeMenu}>Home</Link>
+          <Link to="/faq" className="navbar-link" onClick={closeMenu}>FAQ</Link>
           {(!user || user.role !== 'admin') && (
             <>
-              <Link to="/community" className="navbar-link">Community</Link>
-              <Link to="/leaderboard" className="navbar-link">Leaderboard</Link>
+              <Link to="/community" className="navbar-link" onClick={closeMenu}>Community</Link>
+              <Link to="/leaderboard" className="navbar-link" onClick={closeMenu}>Leaderboard</Link>
             </>
           )}
           {user ? (
             <>
-              {user.role !== 'admin' && <Link to="/dashboard" className="navbar-link">Dashboard</Link>}
+              {user.role !== 'admin' && <Link to="/dashboard" className="navbar-link" onClick={closeMenu}>Dashboard</Link>}
               <span className={`navbar-role navbar-role--${user.role}`}>{user.role}</span>
-              <button className="navbar-btn" onClick={() => { logout(); navigate('/'); }}>Sign out</button>
+              <button className="navbar-btn" onClick={() => { closeMenu(); logout(); navigate('/'); }}>Sign out</button>
             </>
           ) : (
             <>
